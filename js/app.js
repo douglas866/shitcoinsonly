@@ -1,8 +1,10 @@
 // ShitcoinsOnly front-end bootstrap.
 // Live market data: CoinGecko "meme-token" category (top 100 by market cap),
 // proxied through /api/prices (edge-cached 60s) with a direct-CoinGecko
-// fallback for local static preview. Renders the market table (paginated,
-// 10/page), the squarified heatmap, and the topbar total-market-cap quote.
+// fallback for local static preview. Renders: topbar market-cap quote, the
+// squarified heatmap, the paginated top-100 table (price/24h/mcap), plus
+// top-gainers, top-losers and highest-volume panels. Polls once per minute,
+// and pauses while the tab is hidden so background tabs never hit the API.
 
 const PAGE_SIZE = 10;
 const MAX_PAGES = 10; // 10 pages x 10 = top 100
@@ -10,9 +12,9 @@ const MAX_PAGES = 10; // 10 pages x 10 = top 100
 const API_URL = "/api/prices?category=meme-token&per_page=100";
 const CG_FALLBACK =
   "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&category=meme-token&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h";
+const REFRESH_MS = 60_000;
 
-const fmtNum = new Intl.NumberFormat("en-US");
-const fmtPct = (n) => `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
+const fmtPctNum = (n) => `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
 
 function fmtBig(n) {
   if (!isFinite(n) || n <= 0) return "—";
@@ -23,10 +25,25 @@ function fmtBig(n) {
   return "$" + n.toFixed(0);
 }
 
+function fmtPrice(p) {
+  if (!isFinite(p) || p <= 0) return "—";
+  if (p >= 1000) return "$" + p.toLocaleString("en-US", { maximumFractionDigits: 0 });
+  if (p >= 1) return "$" + p.toFixed(2);
+  if (p >= 0.01) return "$" + p.toFixed(4);
+  if (p >= 0.0001) return "$" + p.toFixed(6);
+  return "$" + p.toPrecision(2);
+}
+
 function esc(s) {
   return String(s == null ? "" : s).replace(/[&<>"]/g, (c) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])
   );
+}
+
+function pctCell(change, extraClass) {
+  const cls = change == null || isNaN(change) ? "" : change >= 0 ? "up" : "down";
+  const txt = change == null || isNaN(change) ? "—" : fmtPctNum(change);
+  return `<td class="num ${cls} ${extraClass || ""}">${txt}</td>`;
 }
 
 function setDelta(el, change) {
@@ -36,13 +53,15 @@ function setDelta(el, change) {
     el.classList.remove("up", "down");
     return;
   }
-  el.textContent = fmtPct(change);
+  el.textContent = fmtPctNum(change);
   el.classList.toggle("up", change >= 0);
   el.classList.toggle("down", change < 0);
 }
 
 let marketCache = [];
 let marketPage = 0;
+let inFlight = false;
+let lastLoad = 0;
 
 // === Data ===
 async function fetchMarkets() {
@@ -59,6 +78,8 @@ async function fetchMarkets() {
 }
 
 async function loadMarket() {
+  if (inFlight) return;
+  inFlight = true;
   try {
     const raw = await fetchMarkets();
     if (!Array.isArray(raw)) throw new Error("bad payload");
@@ -73,13 +94,18 @@ async function loadMarket() {
       }))
       .filter((c) => isFinite(c.marketCap) && c.marketCap > 0)
       .sort((a, b) => b.marketCap - a.marketCap);
+    lastLoad = Date.now();
     renderMarket();
+    renderMovers();
+    renderVolume();
     updateQuote();
-    renderHeatmap();
+    renderHeatmapFrom(marketCache);
     markLiveUpdate();
     setStatus("");
   } catch (e) {
     setStatus("Live data unavailable — retrying…");
+  } finally {
+    inFlight = false;
   }
 }
 
@@ -91,18 +117,17 @@ function setStatus(msg) {
 function markLiveUpdate() {
   const el = document.getElementById("heatmapUpdated");
   if (!el) return;
-  const d = new Date();
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/New_York",
     year: "numeric", month: "2-digit", day: "2-digit",
     hour: "2-digit", minute: "2-digit", hour12: false,
-  }).formatToParts(d);
+  }).formatToParts(new Date());
   const lk = {};
   parts.forEach((p) => (lk[p.type] = p.value));
   el.textContent = `${lk.year}-${lk.month}-${lk.day} ${lk.hour}:${lk.minute} ET`;
 }
 
-// === Pagination (mirrors the hodlingbtc holdings pager exactly) ===
+// === Pagination (mirrors hodlingbtc's holdings pager exactly) ===
 function paginate(total, page) {
   const cap = Math.min(total, MAX_PAGES * PAGE_SIZE);
   const maxPage = Math.max(0, Math.ceil(cap / PAGE_SIZE) - 1);
@@ -128,28 +153,27 @@ function updatePagerControls(prefix, current, cap, maxPage, start, end) {
   next.disabled = current >= maxPage;
 }
 
-// === Market table ===
+// === Main market table ===
 function renderMarket() {
   const tbody = document.querySelector("#marketTable tbody");
   if (!tbody) return;
   if (!marketCache.length) {
-    tbody.innerHTML = `<tr><td colspan="5" class="loading">NO DATA</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="loading">NO DATA</td></tr>`;
     return;
   }
   const p = paginate(marketCache.length, marketPage);
   marketPage = p.page;
-  const slice = marketCache.slice(p.start, p.end);
-  tbody.innerHTML = slice
+  tbody.innerHTML = marketCache
+    .slice(p.start, p.end)
     .map((c, i) => {
       const rank = p.start + i + 1;
-      const chCls = c.change == null || isNaN(c.change) ? "" : c.change >= 0 ? "up" : "down";
-      const chTxt = c.change == null || isNaN(c.change) ? "—" : fmtPct(c.change);
       return `
         <tr data-rank="${rank}" data-symbol="${esc(c.symbol)}">
           <td class="num rank">${rank}</td>
           <td class="ticker-cell"><span class="ticker-link">${esc(c.symbol)}</span></td>
-          <td class="company-cell"><span class="company-link">${esc(c.name)}</span></td>
-          <td class="num ${chCls}">${chTxt}</td>
+          <td class="company-cell col-name"><span class="company-link">${esc(c.name)}</span></td>
+          <td class="num col-price">${fmtPrice(c.price)}</td>
+          ${pctCell(c.change)}
           <td class="num">${fmtBig(c.marketCap)}</td>
         </tr>`;
     })
@@ -157,12 +181,62 @@ function renderMarket() {
   updatePagerControls("pager", p.page, p.cap, p.maxPage, p.start, p.end);
 }
 
+// === Gainers / Losers ===
+function renderMovers() {
+  const eligible = marketCache.filter((c) => isFinite(c.change));
+  const gainers = [...eligible].sort((a, b) => b.change - a.change).slice(0, 10);
+  const losers = [...eligible].sort((a, b) => a.change - b.change).slice(0, 10);
+  fillMovers("gainersTable", gainers);
+  fillMovers("losersTable", losers);
+}
+
+function fillMovers(id, rows) {
+  const tbody = document.querySelector(`#${id} tbody`);
+  if (!tbody) return;
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="4" class="loading">NO DATA</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows
+    .map((c, i) => `
+      <tr>
+        <td class="num rank">${i + 1}</td>
+        <td class="ticker-cell"><span class="ticker-link">${esc(c.symbol)}</span></td>
+        ${pctCell(c.change)}
+        <td class="num">${fmtPrice(c.price)}</td>
+      </tr>`)
+    .join("");
+}
+
+// === Highest volume ===
+function renderVolume() {
+  const tbody = document.querySelector("#volumeTable tbody");
+  if (!tbody) return;
+  const rows = [...marketCache]
+    .filter((c) => isFinite(c.volume) && c.volume > 0)
+    .sort((a, b) => b.volume - a.volume)
+    .slice(0, 10);
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="5" class="loading">NO DATA</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows
+    .map((c, i) => `
+      <tr>
+        <td class="num rank">${i + 1}</td>
+        <td class="ticker-cell"><span class="ticker-link">${esc(c.symbol)}</span></td>
+        <td class="company-cell col-name"><span class="company-link">${esc(c.name)}</span></td>
+        <td class="num">${fmtBig(c.volume)}</td>
+        <td class="num">${fmtBig(c.marketCap)}</td>
+      </tr>`)
+    .join("");
+}
+
 // === Topbar total-market-cap quote ===
 function updateQuote() {
   const priceEl = document.getElementById("mcapValue");
   if (!priceEl) return;
-  let total = 0;
-  let weighted = 0;
+  let total = 0, weighted = 0;
   marketCache.forEach((c) => {
     if (isFinite(c.marketCap) && c.marketCap > 0) {
       total += c.marketCap;
@@ -171,13 +245,12 @@ function updateQuote() {
   });
   if (total <= 0) return;
   priceEl.textContent = fmtBig(total);
-  setDelta(document.getElementById("mcapChange"), total > 0 ? weighted / total : null);
+  setDelta(document.getElementById("mcapChange"), weighted / total);
 }
 
 // === Heatmap (ported squarified treemap from hodlingbtc) ===
-(function heatmapModule() {
-  const measureCanvas = document.createElement("canvas");
-  const measureCtx = measureCanvas.getContext("2d");
+const heatmap = (function () {
+  const measureCtx = document.createElement("canvas").getContext("2d");
   function widthAt(label, size) {
     measureCtx.font = `700 ${size}px ui-monospace, "SF Mono", "Cascadia Mono", "Consolas", monospace`;
     let w = measureCtx.measureText(label).width;
@@ -194,10 +267,7 @@ function updateQuote() {
     if (ticker && widthAt(ticker, 7) <= maxW) return ticker;
     const ref = ticker || label;
     if (!ref) return label;
-    for (let n = ref.length; n >= 1; n--) {
-      const t = ref.slice(0, n);
-      if (widthAt(t, 7) <= maxW) return t;
-    }
+    for (let n = ref.length; n >= 1; n--) if (widthAt(ref.slice(0, n), 7) <= maxW) return ref.slice(0, n);
     return ref.slice(0, 1);
   }
   function squarify(items, x, y, w, h, out) {
@@ -217,8 +287,7 @@ function updateQuote() {
         const ratio = Math.max(side / other, other / side);
         if (ratio > worst) worst = ratio;
       }
-      if (worst <= bestRatio) { bestRatio = worst; bestEnd = i; }
-      else break;
+      if (worst <= bestRatio) { bestRatio = worst; bestEnd = i; } else break;
     }
     const row = items.slice(0, bestEnd + 1);
     const rest = items.slice(bestEnd + 1);
@@ -228,123 +297,101 @@ function updateQuote() {
     let cursor = 0;
     if (w >= h) {
       const rowW = w * rowFrac;
-      for (const m of row) {
-        const ih = (m.size / rowTotal) * h;
-        out.push({ item: m, x, y: y + cursor, w: rowW, h: ih });
-        cursor += ih;
-      }
+      for (const m of row) { const ih = (m.size / rowTotal) * h; out.push({ item: m, x, y: y + cursor, w: rowW, h: ih }); cursor += ih; }
       squarify(rest, x + rowW, y, w - rowW, h, out);
     } else {
       const rowH = h * rowFrac;
-      for (const n of row) {
-        const iw = (n.size / rowTotal) * w;
-        out.push({ item: n, x: x + cursor, y, w: iw, h: rowH });
-        cursor += iw;
-      }
+      for (const n of row) { const iw = (n.size / rowTotal) * w; out.push({ item: n, x: x + cursor, y, w: iw, h: rowH }); cursor += iw; }
       squarify(rest, x, y + rowH, w, h - rowH, out);
     }
   }
   function colorForChange(pct) {
     const clamped = Math.max(-5, Math.min(5, pct));
     if (clamped === 0) return "#1a1a1a";
-    if (clamped > 0) {
-      const t = clamped / 5;
-      return `rgb(${Math.round(26 + 20 * (1 - t))},${Math.round(60 + 130 * t)},${Math.round(40 + 10 * (1 - t))})`;
-    }
+    if (clamped > 0) { const t = clamped / 5; return `rgb(${Math.round(26 + 20 * (1 - t))},${Math.round(60 + 130 * t)},${Math.round(40 + 10 * (1 - t))})`; }
     const t = -clamped / 5;
     return `rgb(${Math.round(80 + 130 * t)},${Math.round(30 + 10 * (1 - t))},${Math.round(30 + 10 * (1 - t))})`;
   }
+  let items = [];
+  function setItems(next) { items = next; }
   function render() {
     const canvas = document.getElementById("heatmapCanvas");
-    if (!canvas || !marketCache.length) return;
+    if (!canvas || !items.length) return;
     const rect = canvas.getBoundingClientRect();
     const w = rect.width, h = rect.height;
     if (w < 1 || h < 1) return;
-    const items = marketCache
-      .map((c) => ({
-        label: c.symbol,
-        ticker: c.symbol,
-        name: c.name,
-        size: c.marketCap,
-        changePct: isFinite(c.change) ? c.change : 0,
-      }))
-      .sort((a, b) => b.size - a.size);
     const laidOut = [];
-    squarify(items, 0, 0, w, h, laidOut);
-    canvas.innerHTML = laidOut
-      .map((c) => {
-        const pct = c.item.changePct || 0;
-        const color = colorForChange(pct);
-        const minSide = Math.min(c.w, c.h);
-        const fullLabel = c.item.label || c.item.ticker;
-        const displayLabel = pickLabel(fullLabel, c.item.ticker, c.w - 8);
-        const tickerSize = bestFontSize(displayLabel, c.w - 8, c.h * 0.55);
-        let pctSize = Math.max(6, Math.min(14, Math.round(minSide / 5)));
-        const sign = pct >= 0 ? "+" : "-";
-        const abs = Math.abs(pct);
-        const variants = [
-          sign + abs.toFixed(2) + "%",
-          sign + abs.toFixed(1) + "%",
-          sign + abs.toFixed(1),
-          sign + Math.round(abs),
-          String(Math.round(abs)),
-        ];
-        const avail = c.w - 4;
-        let pctText = variants[variants.length - 1];
-        for (const v of variants) if (widthAt(v, pctSize) <= avail) { pctText = v; break; }
-        while (pctSize > 5 && widthAt(pctText, pctSize) > avail) pctSize--;
-        const heightFits = c.h >= tickerSize + pctSize + 4;
-        const showPct = widthAt(pctText, pctSize) <= avail && heightFits;
-        return (
-          '<div class="heatmap-cell" ' +
-          `style="left:${c.x}px;top:${c.y}px;width:${c.w}px;height:${c.h}px;background:${color}" ` +
-          `title="${esc(c.item.name)} · ${(pct >= 0 ? "+" : "") + pct.toFixed(2)}%">` +
-          `<span class="heatmap-cell__ticker" style="font-size:${tickerSize}px">${esc(displayLabel)}</span>` +
-          (showPct ? `<span class="heatmap-cell__pct" style="font-size:${pctSize}px">${pctText}</span>` : "") +
-          "</div>"
-        );
-      })
-      .join("");
+    squarify(items.slice().sort((a, b) => b.size - a.size), 0, 0, w, h, laidOut);
+    canvas.innerHTML = laidOut.map((c) => {
+      const pct = c.item.changePct || 0;
+      const color = colorForChange(pct);
+      const minSide = Math.min(c.w, c.h);
+      const displayLabel = pickLabel(c.item.label || c.item.ticker, c.item.ticker, c.w - 8);
+      const tickerSize = bestFontSize(displayLabel, c.w - 8, c.h * 0.55);
+      let pctSize = Math.max(6, Math.min(14, Math.round(minSide / 5)));
+      const sign = pct >= 0 ? "+" : "-", abs = Math.abs(pct);
+      const variants = [sign + abs.toFixed(2) + "%", sign + abs.toFixed(1) + "%", sign + abs.toFixed(1), sign + Math.round(abs), String(Math.round(abs))];
+      const avail = c.w - 4;
+      let pctText = variants[variants.length - 1];
+      for (const v of variants) if (widthAt(v, pctSize) <= avail) { pctText = v; break; }
+      while (pctSize > 5 && widthAt(pctText, pctSize) > avail) pctSize--;
+      const showPct = widthAt(pctText, pctSize) <= avail && c.h >= tickerSize + pctSize + 4;
+      return '<div class="heatmap-cell" ' +
+        `style="left:${c.x}px;top:${c.y}px;width:${c.w}px;height:${c.h}px;background:${color}" ` +
+        `title="${esc(c.item.name)} · ${(pct >= 0 ? "+" : "") + pct.toFixed(2)}%">` +
+        `<span class="heatmap-cell__ticker" style="font-size:${tickerSize}px">${esc(displayLabel)}</span>` +
+        (showPct ? `<span class="heatmap-cell__pct" style="font-size:${pctSize}px">${pctText}</span>` : "") +
+        "</div>";
+    }).join("");
   }
   let resizeTimer;
-  window.addEventListener("resize", () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(render, 100);
-  });
-  window.renderHeatmap = render;
+  window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(render, 100); });
+  return { setItems, render };
 })();
-function renderHeatmap() { if (window.renderHeatmap) window.renderHeatmap(); }
 
-// === Ticker carousel char-highlight (ported verbatim behaviour) ===
+function renderHeatmapFrom(coins) {
+  heatmap.setItems(coins.map((c) => ({
+    label: c.symbol, ticker: c.symbol, name: c.name,
+    size: c.marketCap, changePct: isFinite(c.change) ? c.change : 0,
+  })));
+  heatmap.render();
+}
+
+// Instant paint from the SSR heatmap island before the first live fetch lands.
+(function hydrateHeatmapIsland() {
+  const el = document.getElementById("heatmapData");
+  if (!el || !el.textContent.trim()) return;
+  try {
+    const payload = JSON.parse(el.textContent);
+    if (payload && Array.isArray(payload.coins) && payload.coins.length) {
+      heatmap.setItems(payload.coins.map((c) => ({
+        label: c.symbol, ticker: c.symbol, name: c.name, size: c.size, changePct: c.changePct || 0,
+      })));
+      heatmap.render();
+    }
+  } catch (e) {}
+})();
+
+// === Ticker carousel char-highlight (ported behaviour) ===
 (function carouselHighlight() {
   const c = document.querySelector(".topbar__carousel");
   if (!c) return;
-  const links = c.querySelectorAll("a");
-  links.forEach((lnk) => {
+  c.querySelectorAll("a").forEach((lnk) => {
     if (lnk.getAttribute("data-split") === "1") return;
     lnk.setAttribute("data-split", "1");
-    const t = lnk.textContent;
-    const frag = document.createDocumentFragment();
-    for (let k = 0; k < t.length; k++) {
-      const s = document.createElement("span");
-      s.className = "tcc";
-      s.textContent = t.charAt(k);
-      frag.appendChild(s);
-    }
-    lnk.textContent = "";
-    lnk.appendChild(frag);
+    const t = lnk.textContent, frag = document.createDocumentFragment();
+    for (let k = 0; k < t.length; k++) { const s = document.createElement("span"); s.className = "tcc"; s.textContent = t.charAt(k); frag.appendChild(s); }
+    lnk.textContent = ""; lnk.appendChild(frag);
   });
   const HALF = 110;
   function tick() {
     const r = c.getBoundingClientRect();
     if (r.width === 0) return;
     const cx = r.left + r.width / 2;
-    const L = c.querySelectorAll("a");
-    for (const a of L) {
+    for (const a of c.querySelectorAll("a")) {
       const lr = a.getBoundingClientRect();
       if (lr.right < r.left - 50 || lr.left > r.right + 50) continue;
-      const chars = a.querySelectorAll(".tcc");
-      for (const ch of chars) {
+      for (const ch of a.querySelectorAll(".tcc")) {
         const ar = ch.getBoundingClientRect();
         const d = Math.abs(ar.left + ar.width / 2 - cx);
         if (d > HALF) { ch.style.color = ""; continue; }
@@ -361,8 +408,7 @@ function renderHeatmap() { if (window.renderHeatmap) window.renderHeatmap(); }
 function syncTopbarHeight() {
   const topbar = document.querySelector(".topbar");
   if (!topbar) return;
-  const h = Math.round(topbar.getBoundingClientRect().height);
-  document.documentElement.style.setProperty("--topbar-h", `${h}px`);
+  document.documentElement.style.setProperty("--topbar-h", `${Math.round(topbar.getBoundingClientRect().height)}px`);
 }
 
 // === Pager clicks ===
@@ -376,13 +422,9 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// Brand → scroll to top on home.
 document.querySelector(".topbar__brand .brand-link")?.addEventListener("click", (e) => {
   const path = window.location.pathname;
-  if (path === "/" || path === "/index.html") {
-    e.preventDefault();
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
+  if (path === "/" || path === "/index.html") { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }
 });
 
 // === Boot ===
@@ -393,4 +435,10 @@ window.addEventListener("resize", syncTopbarHeight);
 window.addEventListener("load", syncTopbarHeight);
 
 loadMarket();
-setInterval(loadMarket, 60_000);
+
+// Visibility-aware polling: never fetch while the tab is hidden, and refresh
+// immediately (if data is stale) when the tab comes back to the foreground.
+setInterval(() => { if (!document.hidden) loadMarket(); }, REFRESH_MS);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && Date.now() - lastLoad > REFRESH_MS) loadMarket();
+});
