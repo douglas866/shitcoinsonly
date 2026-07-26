@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="ShitcoinsOnly: live tracker for shitcoins and memecoins. Price, 24h change, market cap and volume for DOGE, SHIB, PEPE, WIF, BONK and more." />
-  <meta name="keywords" content="shitcoins, memecoins, doge, shib, pepe, wif, bonk, floki, memecoin market cap, memecoin price tracker" />
+  <meta name="description" content="ShitcoinsOnly: live tracker of the top 100 shitcoins and memecoins by market cap. Live market cap, 24h change, and a real-time heatmap. DOGE, SHIB, PEPE, WIF, BONK and more." />
+  <meta name="keywords" content="shitcoins, memecoins, top 100 memecoins, doge, shib, pepe, wif, bonk, floki, memecoin market cap, memecoin heatmap, shitcoin tracker" />
   <meta name="author" content="ShitcoinsOnly" />
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
   <meta name="theme-color" content="#0a0a0a" />
@@ -18,112 +18,140 @@
   <link rel="manifest" href="/manifest.json" />
   <link rel="dns-prefetch" href="https://api.coingecko.com" />
   <link rel="preconnect" href="https://api.coingecko.com" crossorigin />
-  <title>ShitcoinsOnly | Live Shitcoin &amp; Memecoin Tracker</title>
+  <title>ShitcoinsOnly | Top 100 Shitcoin &amp; Memecoin Tracker</title>
 
   <meta property="og:title" content="ShitcoinsOnly" />
-  <meta property="og:description" content="Live tracker for shitcoins and memecoins - price, 24h change, market cap and volume. Just the numbers." />
+  <meta property="og:description" content="Live tracker of the top 100 shitcoins and memecoins by market cap. Market cap, 24h change, and a real-time heatmap. Just the numbers." />
+  <meta property="og:image" content="https://shitcoinsonly.com/assets/og-image.svg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
   <meta property="og:url" content="https://shitcoinsonly.com" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="ShitcoinsOnly" />
   <meta property="og:locale" content="en_US" />
+  <meta property="og:image:alt" content="ShitcoinsOnly - top 100 shitcoin & memecoin tracker" />
 
-  <link rel="icon" href="/assets/favicon.ico" sizes="any" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png" />
-  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="ShitcoinsOnly" />
+  <meta name="twitter:description" content="Live tracker of the top 100 shitcoins and memecoins by market cap. Market cap, 24h change, and a real-time heatmap." />
+  <meta name="twitter:image" content="https://shitcoinsonly.com/assets/og-image.svg" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/css/styles.css" />
 
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "ShitcoinsOnly",
+    "alternateName": "Shitcoins Only",
+    "url": "https://shitcoinsonly.com",
+    "description": "Live tracker of the top 100 shitcoins and memecoins by market cap, with a real-time heatmap.",
+    "inLanguage": "en",
+    "publisher": {
+      "@type": "Organization",
+      "name": "ShitcoinsOnly",
+      "logo": { "@type": "ImageObject", "url": "https://shitcoinsonly.com/assets/og-image.svg", "width": 1200, "height": 630 }
+    }
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "ShitcoinsOnly",
+    "url": "https://shitcoinsonly.com",
+    "logo": "https://shitcoinsonly.com/assets/og-image.svg",
+    "description": "Live tracker of the top 100 shitcoins and memecoins by market cap."
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Top 100 Shitcoins by Market Cap",
+    "description": "A continuously updated dataset of the top 100 shitcoins and memecoins ranked by market capitalization, with 24h price change.",
+    "url": "https://shitcoinsonly.com/#market",
+    "keywords": ["shitcoins", "memecoins", "market cap", "24h change", "crypto"],
+    "creator": { "@type": "Organization", "name": "ShitcoinsOnly", "url": "https://shitcoinsonly.com" },
+    "license": "https://shitcoinsonly.com/",
+    "isAccessibleForFree": true,
+    "variableMeasured": [
+      { "@type": "PropertyValue", "name": "Market capitalization", "unitText": "USD" },
+      { "@type": "PropertyValue", "name": "24h price change", "unitText": "PERCENT" },
+      { "@type": "PropertyValue", "name": "Symbol" },
+      { "@type": "PropertyValue", "name": "Name" }
+    ]
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Shitcoin Heatmap",
+    "description": "Live treemap of the top shitcoins by market cap, colored by 24h price change.",
+    "url": "https://shitcoinsonly.com/#heatmap",
+    "keywords": ["shitcoins", "memecoins", "heatmap", "treemap", "market cap", "24h change"],
+    "creator": { "@type": "Organization", "name": "ShitcoinsOnly", "url": "https://shitcoinsonly.com" },
+    "isAccessibleForFree": true, "license": "https://creativecommons.org/licenses/by/4.0/",
+    "variableMeasured": [
+      { "@type": "PropertyValue", "name": "Market capitalization", "unitText": "USD" },
+      { "@type": "PropertyValue", "name": "24h price change", "unitText": "PERCENT" },
+      { "@type": "PropertyValue", "name": "Symbol" }
+    ]
+  }
+  </script>
+
+  <link rel="icon" type="image/x-icon" href="/assets/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="96x96" href="/assets/favicon-96x96.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/favicon-192x192.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png" />
   <style>
-    /* Sub-nav tagline strip (replaces the BTC section carousel) */
-    .subnav {
-      border-bottom: 1px solid var(--border-strong);
-      background: var(--bg-elev);
-      padding: 8px 16px;
-      text-align: center;
-      font-size: 12px;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--text-faint);
-      overflow: hidden;
-      white-space: nowrap;
+    .panel__head--heatmap{flex-wrap:wrap;gap:8px;align-items:baseline;justify-content:space-between}
+    .heatmap-meta{font-size:11px;color:#b4b4b4;letter-spacing:.06em;text-transform:uppercase}
+    .heatmap-canvas{position:relative;width:100%;aspect-ratio:2 / 1;min-height:360px;background:#050505;border:1px solid #2c2c2c;overflow:hidden;margin-top:10px}
+    .heatmap-cell{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;text-decoration:none;color:#fff;border:1px solid rgba(0,0,0,.4);font-family:var(--mono);overflow:hidden;line-height:1.1;transition:outline .12s ease,z-index 0s}
+    .heatmap-cell:hover{outline:2px solid #fff;z-index:2}
+    .heatmap-cell__ticker{font-weight:700;letter-spacing:.04em;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:clip;padding:0 2px;text-align:center}
+    .heatmap-cell__pct{opacity:.9;margin-top:2px}
+    .heatmap-figure{margin:0;padding:0}
+    .panel-title-link{color:inherit;text-decoration:none}
+    .panel-title-link:hover{color:#ff7a00}
+    @media (max-width:640px){
+      .heatmap-canvas{aspect-ratio:4 / 5;min-height:460px}
+      .panel__head--heatmap{flex-direction:column;align-items:flex-start}
     }
-    .subnav b { color: var(--accent); font-weight: 600; }
-
-    /* Heatmap: flex tiles sized by sqrt(market cap), colored by 24h change */
-    .heatmap-canvas {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 3px;
-      min-height: 220px;
-      padding: 3px;
-    }
-    .heat-tile {
-      flex-basis: 90px;
-      min-width: 64px;
-      min-height: 66px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      border-radius: 3px;
-      padding: 6px;
-      background: var(--bg-row);
-      border: 1px solid var(--border);
-    }
-    .heat-tile.up   { background: rgba(34, 197, 94, 0.16);  border-color: rgba(34, 197, 94, 0.4); }
-    .heat-tile.down { background: rgba(239, 68, 68, 0.16);  border-color: rgba(239, 68, 68, 0.4); }
-    .heat-sym { font-weight: 700; font-size: 14px; color: var(--text); }
-    .heat-chg { font-size: 12px; margin-top: 2px; }
-    .heat-tile.up   .heat-chg { color: var(--up); }
-    .heat-tile.down .heat-chg { color: var(--down); }
-
-    /* Guarantee green/red deltas in the table regardless of base rules */
-    .data-table td.up   { color: var(--up); }
-    .data-table td.down { color: var(--down); }
-
-    .market-status {
-      padding: 10px 16px;
-      font-size: 12px;
-      color: var(--text-faint);
-      border-top: 1px solid var(--border);
-    }
-    .site-footer {
-      max-width: 1120px;
-      margin: 32px auto 48px;
-      padding: 16px;
-      font-size: 12px;
-      line-height: 1.7;
-      color: var(--text-faint);
-      text-align: center;
-    }
-    .site-footer b { color: var(--text-dim); }
   </style>
 </head>
 <body>
-  <h1 class="sr-only">ShitcoinsOnly: live shitcoin &amp; memecoin market tracker</h1>
-
+  <h1 class="sr-only">ShitcoinsOnly: top 100 shitcoin &amp; memecoin market tracker</h1>
   <header class="topbar">
     <div class="topbar__brand">
       <a href="/" class="brand-link" aria-label="ShitcoinsOnly home"><span class="brand__name">SHITCOINS</span><span class="brand__mark">ONLY</span></a>
     </div>
-    <div class="topbar__quote" aria-label="Tracked memecoin market cap">
-      <span class="quote__label">MCAP</span>
-      <span id="mcapValue" class="quote__value">&mdash;</span>
-      <span id="mcapChange" class="quote__delta">&mdash;</span>
-    </div>
+    <div class="topbar__quote" aria-label="Tracked memecoin market cap"><span class="quote__label">MCAP</span><span id="mcapValue" class="quote__value">&mdash;</span><span id="mcapChange" class="quote__delta">&mdash;</span></div>
   </header>
 
-  <section class="subnav" aria-label="Tagline">
-    <b>Shitcoins only.</b> &nbsp;Live price &middot; 24h &middot; market cap &middot; volume &nbsp;&middot;&nbsp; no contracts &middot; no links &middot; just the numbers
+  <section class="ticker" aria-label="Section navigator">
+    <div class="topbar__carousel" aria-label="Section navigator"><div class="topbar__carousel-track"><a href="#market">TOP 100 SHITCOINS</a><a href="#heatmap">LIVE HEATMAP</a><a href="#market">RANKED BY MARKET CAP</a><a href="#market">24H CHANGE</a><a href="#market">MEMECOINS ONLY</a><a href="#market">NO CONTRACTS &middot; NO LINKS</a><a href="#market">JUST THE NUMBERS</a><a href="#market">TOP 100 SHITCOINS</a><a href="#heatmap">LIVE HEATMAP</a><a href="#market">RANKED BY MARKET CAP</a><a href="#market">24H CHANGE</a><a href="#market">MEMECOINS ONLY</a><a href="#market">NO CONTRACTS &middot; NO LINKS</a><a href="#market">JUST THE NUMBERS</a></div></div>
   </section>
 
   <main class="layout">
     <section id="heatmap" class="panel">
       <header class="panel__head panel__head--heatmap">
         <h2 class="panel__title">HEATMAP</h2>
+        <time id="heatmapUpdated" class="heatmap-meta">&mdash;</time>
       </header>
       <figure class="heatmap-figure">
-        <figcaption class="sr-only">Live map of tracked shitcoins sized by market cap, colored by 24h price change.</figcaption>
-        <div id="heatmapCanvas" class="heatmap-canvas" role="img" aria-label="Shitcoins sized by market cap and colored by 24h change">
+        <figcaption class="sr-only">Live treemap of the top shitcoins sized by market cap, colored by 24h price change.</figcaption>
+        <div id="heatmapCanvas" class="heatmap-canvas" role="img" aria-label="Treemap of top shitcoins sized by market cap and colored by 24h change">
           <noscript>Enable JavaScript to load the live heatmap.</noscript>
         </div>
       </figure>
@@ -131,7 +159,16 @@
 
     <section id="market" class="panel">
       <header class="panel__head">
-        <h2 class="panel__title">SHITCOIN MARKET</h2>
+        <h2 class="panel__title">TOP 100 SHITCOINS</h2>
+        <div class="pager" aria-label="Market pagination">
+          <button type="button" class="pager__btn" id="pagerPrev" aria-label="Previous 10" hidden>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          <span class="pager__label" id="pagerLabel">&mdash;</span>
+          <button type="button" class="pager__btn" id="pagerNext" aria-label="Next 10">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+        </div>
       </header>
       <div class="table-wrap">
         <table class="data-table" id="marketTable">
@@ -140,25 +177,26 @@
               <th class="num">#</th>
               <th>COIN</th>
               <th>NAME</th>
-              <th>CHAIN</th>
-              <th class="num">PRICE</th>
               <th class="num">24H</th>
               <th class="num">MARKET CAP</th>
-              <th class="num">VOLUME</th>
             </tr>
           </thead>
-          <tbody id="marketBody">
-            <tr><td colspan="8" style="padding:16px;color:var(--text-faint)">Loading live data…</td></tr>
+          <tbody>
+            <tr><td colspan="5" class="loading">LOADING&hellip;</td></tr>
           </tbody>
         </table>
       </div>
-      <div id="marketStatus" class="market-status"></div>
+      <div id="marketStatus" class="market-status" style="padding:10px 16px;font-size:12px;color:#777"></div>
     </section>
   </main>
 
-  <footer class="site-footer">
-    <b>ShitcoinsOnly</b> &middot; live memecoin market data, refreshed every minute.<br />
-    For information only. This is not financial advice. Memecoins are extremely high-risk. Data via CoinGecko.
+  <footer class="footer">
+    <div class="footer__links">
+      <span class="footer__source">DATA</span>
+      <span class="footer__sep">&middot;</span>
+      <span class="footer__source">COINGECKO</span>
+    </div>
+    <p class="footer__legal">&copy; <span id="year">2026</span> SHITCOINSONLY. Independent tracker. For informational purposes only. Not investment advice. Shitcoins and memecoins are extremely high-risk and can lose all value. Data displayed may be delayed, incomplete, or inaccurate and should be independently verified before use.</p>
   </footer>
 
   <script src="/js/app.js" defer></script>

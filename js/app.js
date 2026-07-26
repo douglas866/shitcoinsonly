@@ -1,198 +1,396 @@
-// ShitcoinsOnly - homepage renderer.
-// Loads the tracked-coin list (data/coins.json), fetches live market data
-// (/api/prices, which proxies CoinGecko), and renders the market table,
-// the heatmap and the topbar total-market-cap quote. Refreshes every 60s.
+// ShitcoinsOnly front-end bootstrap.
+// Live market data: CoinGecko "meme-token" category (top 100 by market cap),
+// proxied through /api/prices (edge-cached 60s) with a direct-CoinGecko
+// fallback for local static preview. Renders the market table (paginated,
+// 10/page), the squarified heatmap, and the topbar total-market-cap quote.
 
-(function () {
-  "use strict";
+const PAGE_SIZE = 10;
+const MAX_PAGES = 10; // 10 pages x 10 = top 100
 
-  var REFRESH_MS = 60000;
-  var COINS_URL = "/data/coins.json";
-  var API_URL = "/api/prices";
-  // Direct fallback for local static preview where /api/prices does not exist.
-  var CG_MARKETS = "https://api.coingecko.com/api/v3/coins/markets";
+const API_URL = "/api/prices?category=meme-token&per_page=100";
+const CG_FALLBACK =
+  "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&category=meme-token&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h";
 
-  var usd = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+const fmtNum = new Intl.NumberFormat("en-US");
+const fmtPct = (n) => `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
 
-  // Sub-cent memecoin prices need many decimals to be meaningful.
-  function fmtPrice(p) {
-    if (!isFinite(p) || p <= 0) return "—";
-    if (p >= 1) return usd.format(p);
-    if (p >= 0.01) return "$" + p.toFixed(4);
-    if (p >= 0.0001) return "$" + p.toFixed(6);
-    return "$" + p.toPrecision(2);
+function fmtBig(n) {
+  if (!isFinite(n) || n <= 0) return "—";
+  if (n >= 1e12) return "$" + (n / 1e12).toFixed(2) + "T";
+  if (n >= 1e9) return "$" + (n / 1e9).toFixed(2) + "B";
+  if (n >= 1e6) return "$" + (n / 1e6).toFixed(2) + "M";
+  if (n >= 1e3) return "$" + (n / 1e3).toFixed(2) + "K";
+  return "$" + n.toFixed(0);
+}
+
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"]/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])
+  );
+}
+
+function setDelta(el, change) {
+  if (!el) return;
+  if (change == null || isNaN(change)) {
+    el.textContent = "—";
+    el.classList.remove("up", "down");
+    return;
   }
+  el.textContent = fmtPct(change);
+  el.classList.toggle("up", change >= 0);
+  el.classList.toggle("down", change < 0);
+}
 
-  function fmtBig(n) {
-    if (!isFinite(n) || n <= 0) return "—";
-    if (n >= 1e12) return "$" + (n / 1e12).toFixed(2) + "T";
-    if (n >= 1e9) return "$" + (n / 1e9).toFixed(2) + "B";
-    if (n >= 1e6) return "$" + (n / 1e6).toFixed(2) + "M";
-    if (n >= 1e3) return "$" + (n / 1e3).toFixed(2) + "K";
-    return "$" + n.toFixed(0);
-  }
+let marketCache = [];
+let marketPage = 0;
 
-  function fmtPct(v) {
-    if (v == null || !isFinite(v)) return "—";
-    return (v >= 0 ? "+" : "") + v.toFixed(2) + "%";
-  }
-
-  function pctClass(v) {
-    if (v == null || !isFinite(v)) return "";
-    return v >= 0 ? "up" : "down";
-  }
-
-  function esc(s) {
-    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
-      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
-    });
-  }
-
-  function getJSON(url) {
-    return fetch(url, { cache: "no-store" }).then(function (r) {
-      if (!r.ok) throw new Error(url + " -> " + r.status);
+// === Data ===
+async function fetchMarkets() {
+  const getJSON = (u) =>
+    fetch(u, { cache: "no-store" }).then((r) => {
+      if (!r.ok) throw new Error(u + " " + r.status);
       return r.json();
     });
+  try {
+    return await getJSON(API_URL);
+  } catch (e) {
+    return await getJSON(CG_FALLBACK);
   }
+}
 
-  // Try the edge proxy first; on any failure fall back to CoinGecko directly.
-  function fetchMarkets(ids) {
-    var q = "?ids=" + encodeURIComponent(ids.join(","));
-    return getJSON(API_URL + q).catch(function () {
-      var u =
-        CG_MARKETS +
-        q +
-        "&vs_currency=usd&order=market_cap_desc&per_page=" +
-        ids.length +
-        "&page=1&sparkline=false&price_change_percentage=24h";
-      return getJSON(u);
-    });
+async function loadMarket() {
+  try {
+    const raw = await fetchMarkets();
+    if (!Array.isArray(raw)) throw new Error("bad payload");
+    marketCache = raw
+      .map((m) => ({
+        symbol: (m.symbol || "").toUpperCase(),
+        name: m.name || "",
+        price: m.current_price,
+        change: m.price_change_percentage_24h,
+        marketCap: m.market_cap,
+        volume: m.total_volume,
+      }))
+      .filter((c) => isFinite(c.marketCap) && c.marketCap > 0)
+      .sort((a, b) => b.marketCap - a.marketCap);
+    renderMarket();
+    updateQuote();
+    renderHeatmap();
+    markLiveUpdate();
+    setStatus("");
+  } catch (e) {
+    setStatus("Live data unavailable — retrying…");
   }
+}
 
-  function renderTable(rows) {
-    var tbody = document.getElementById("marketBody");
-    if (!tbody) return;
-    var html = "";
-    for (var i = 0; i < rows.length; i++) {
-      var c = rows[i];
-      var pc = pctClass(c.change);
-      html +=
-        '<tr data-rank="' + (i + 1) + '" data-symbol="' + esc(c.symbol) + '">' +
-        '<td class="num rank">' + (i + 1) + "</td>" +
-        '<td class="ticker-cell"><span class="ticker-link">' + esc(c.symbol) + "</span></td>" +
-        '<td class="company-cell"><span class="company-link">' + esc(c.name) + "</span></td>" +
-        '<td class="country-cell">' + esc(c.chain || "") + "</td>" +
-        '<td class="num">' + fmtPrice(c.price) + "</td>" +
-        '<td class="num ' + pc + '">' + fmtPct(c.change) + "</td>" +
-        '<td class="num">' + fmtBig(c.marketCap) + "</td>" +
-        '<td class="num">' + fmtBig(c.volume) + "</td>" +
-        "</tr>";
+function setStatus(msg) {
+  const el = document.getElementById("marketStatus");
+  if (el) el.textContent = msg;
+}
+
+function markLiveUpdate() {
+  const el = document.getElementById("heatmapUpdated");
+  if (!el) return;
+  const d = new Date();
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/New_York",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", hour12: false,
+  }).formatToParts(d);
+  const lk = {};
+  parts.forEach((p) => (lk[p.type] = p.value));
+  el.textContent = `${lk.year}-${lk.month}-${lk.day} ${lk.hour}:${lk.minute} ET`;
+}
+
+// === Pagination (mirrors the hodlingbtc holdings pager exactly) ===
+function paginate(total, page) {
+  const cap = Math.min(total, MAX_PAGES * PAGE_SIZE);
+  const maxPage = Math.max(0, Math.ceil(cap / PAGE_SIZE) - 1);
+  const safePage = Math.min(page, maxPage);
+  const start = safePage * PAGE_SIZE;
+  const end = Math.min(start + PAGE_SIZE, cap);
+  return { start, end, cap, maxPage, page: safePage };
+}
+
+function updatePagerControls(prefix, current, cap, maxPage, start, end) {
+  const label = document.getElementById(`${prefix}Label`);
+  const prev = document.getElementById(`${prefix}Prev`);
+  const next = document.getElementById(`${prefix}Next`);
+  if (!label || !prev || !next) return;
+  if (cap === 0) {
+    label.textContent = "—";
+    prev.hidden = true;
+    next.disabled = true;
+    return;
+  }
+  label.textContent = `${start + 1}–${end} / ${cap}`;
+  prev.hidden = current === 0;
+  next.disabled = current >= maxPage;
+}
+
+// === Market table ===
+function renderMarket() {
+  const tbody = document.querySelector("#marketTable tbody");
+  if (!tbody) return;
+  if (!marketCache.length) {
+    tbody.innerHTML = `<tr><td colspan="5" class="loading">NO DATA</td></tr>`;
+    return;
+  }
+  const p = paginate(marketCache.length, marketPage);
+  marketPage = p.page;
+  const slice = marketCache.slice(p.start, p.end);
+  tbody.innerHTML = slice
+    .map((c, i) => {
+      const rank = p.start + i + 1;
+      const chCls = c.change == null || isNaN(c.change) ? "" : c.change >= 0 ? "up" : "down";
+      const chTxt = c.change == null || isNaN(c.change) ? "—" : fmtPct(c.change);
+      return `
+        <tr data-rank="${rank}" data-symbol="${esc(c.symbol)}">
+          <td class="num rank">${rank}</td>
+          <td class="ticker-cell"><span class="ticker-link">${esc(c.symbol)}</span></td>
+          <td class="company-cell"><span class="company-link">${esc(c.name)}</span></td>
+          <td class="num ${chCls}">${chTxt}</td>
+          <td class="num">${fmtBig(c.marketCap)}</td>
+        </tr>`;
+    })
+    .join("");
+  updatePagerControls("pager", p.page, p.cap, p.maxPage, p.start, p.end);
+}
+
+// === Topbar total-market-cap quote ===
+function updateQuote() {
+  const priceEl = document.getElementById("mcapValue");
+  if (!priceEl) return;
+  let total = 0;
+  let weighted = 0;
+  marketCache.forEach((c) => {
+    if (isFinite(c.marketCap) && c.marketCap > 0) {
+      total += c.marketCap;
+      if (isFinite(c.change)) weighted += c.marketCap * c.change;
     }
-    tbody.innerHTML = html;
-  }
+  });
+  if (total <= 0) return;
+  priceEl.textContent = fmtBig(total);
+  setDelta(document.getElementById("mcapChange"), total > 0 ? weighted / total : null);
+}
 
-  function renderHeatmap(rows) {
-    var canvas = document.getElementById("heatmapCanvas");
-    if (!canvas) return;
-    var withCap = rows.filter(function (c) {
-      return isFinite(c.marketCap) && c.marketCap > 0;
-    });
-    if (!withCap.length) return;
-    var html = "";
-    for (var i = 0; i < withCap.length; i++) {
-      var c = withCap[i];
-      // sqrt keeps the biggest coin from swallowing the whole grid.
-      var grow = Math.max(1, Math.sqrt(c.marketCap));
-      var cls = pctClass(c.change);
-      html +=
-        '<div class="heat-tile ' + cls + '" style="flex-grow:' + grow.toFixed(2) + '">' +
-        '<span class="heat-sym">' + esc(c.symbol) + "</span>" +
-        '<span class="heat-chg">' + fmtPct(c.change) + "</span>" +
-        "</div>";
+// === Heatmap (ported squarified treemap from hodlingbtc) ===
+(function heatmapModule() {
+  const measureCanvas = document.createElement("canvas");
+  const measureCtx = measureCanvas.getContext("2d");
+  function widthAt(label, size) {
+    measureCtx.font = `700 ${size}px ui-monospace, "SF Mono", "Cascadia Mono", "Consolas", monospace`;
+    let w = measureCtx.measureText(label).width;
+    if (label.length > 1) w += (label.length - 1) * size * 0.04;
+    return w;
+  }
+  function bestFontSize(label, maxW, maxH) {
+    const hi = Math.min(20, Math.floor(maxH));
+    for (let s = hi; s >= 7; s--) if (widthAt(label, s) <= maxW) return s;
+    return 7;
+  }
+  function pickLabel(label, ticker, maxW) {
+    if (widthAt(label, 7) <= maxW) return label;
+    if (ticker && widthAt(ticker, 7) <= maxW) return ticker;
+    const ref = ticker || label;
+    if (!ref) return label;
+    for (let n = ref.length; n >= 1; n--) {
+      const t = ref.slice(0, n);
+      if (widthAt(t, 7) <= maxW) return t;
     }
-    canvas.innerHTML = html;
+    return ref.slice(0, 1);
   }
+  function squarify(items, x, y, w, h, out) {
+    if (!items.length) return;
+    if (items.length === 1) { out.push({ item: items[0], x, y, w, h }); return; }
+    let total = 0;
+    for (const it of items) total += it.size;
+    const shortSide = Math.min(w, h);
+    let bestEnd = 0, bestRatio = Infinity, rowSum = 0;
+    for (let i = 0; i < items.length; i++) {
+      rowSum += items[i].size;
+      let worst = 0;
+      for (let j = 0; j <= i; j++) {
+        const area = (items[j].size / total) * w * h;
+        const side = (items[j].size / rowSum) * shortSide;
+        const other = area / side;
+        const ratio = Math.max(side / other, other / side);
+        if (ratio > worst) worst = ratio;
+      }
+      if (worst <= bestRatio) { bestRatio = worst; bestEnd = i; }
+      else break;
+    }
+    const row = items.slice(0, bestEnd + 1);
+    const rest = items.slice(bestEnd + 1);
+    let rowTotal = 0;
+    for (const r of row) rowTotal += r.size;
+    const rowFrac = rowTotal / total;
+    let cursor = 0;
+    if (w >= h) {
+      const rowW = w * rowFrac;
+      for (const m of row) {
+        const ih = (m.size / rowTotal) * h;
+        out.push({ item: m, x, y: y + cursor, w: rowW, h: ih });
+        cursor += ih;
+      }
+      squarify(rest, x + rowW, y, w - rowW, h, out);
+    } else {
+      const rowH = h * rowFrac;
+      for (const n of row) {
+        const iw = (n.size / rowTotal) * w;
+        out.push({ item: n, x: x + cursor, y, w: iw, h: rowH });
+        cursor += iw;
+      }
+      squarify(rest, x, y + rowH, w, h - rowH, out);
+    }
+  }
+  function colorForChange(pct) {
+    const clamped = Math.max(-5, Math.min(5, pct));
+    if (clamped === 0) return "#1a1a1a";
+    if (clamped > 0) {
+      const t = clamped / 5;
+      return `rgb(${Math.round(26 + 20 * (1 - t))},${Math.round(60 + 130 * t)},${Math.round(40 + 10 * (1 - t))})`;
+    }
+    const t = -clamped / 5;
+    return `rgb(${Math.round(80 + 130 * t)},${Math.round(30 + 10 * (1 - t))},${Math.round(30 + 10 * (1 - t))})`;
+  }
+  function render() {
+    const canvas = document.getElementById("heatmapCanvas");
+    if (!canvas || !marketCache.length) return;
+    const rect = canvas.getBoundingClientRect();
+    const w = rect.width, h = rect.height;
+    if (w < 1 || h < 1) return;
+    const items = marketCache
+      .map((c) => ({
+        label: c.symbol,
+        ticker: c.symbol,
+        name: c.name,
+        size: c.marketCap,
+        changePct: isFinite(c.change) ? c.change : 0,
+      }))
+      .sort((a, b) => b.size - a.size);
+    const laidOut = [];
+    squarify(items, 0, 0, w, h, laidOut);
+    canvas.innerHTML = laidOut
+      .map((c) => {
+        const pct = c.item.changePct || 0;
+        const color = colorForChange(pct);
+        const minSide = Math.min(c.w, c.h);
+        const fullLabel = c.item.label || c.item.ticker;
+        const displayLabel = pickLabel(fullLabel, c.item.ticker, c.w - 8);
+        const tickerSize = bestFontSize(displayLabel, c.w - 8, c.h * 0.55);
+        let pctSize = Math.max(6, Math.min(14, Math.round(minSide / 5)));
+        const sign = pct >= 0 ? "+" : "-";
+        const abs = Math.abs(pct);
+        const variants = [
+          sign + abs.toFixed(2) + "%",
+          sign + abs.toFixed(1) + "%",
+          sign + abs.toFixed(1),
+          sign + Math.round(abs),
+          String(Math.round(abs)),
+        ];
+        const avail = c.w - 4;
+        let pctText = variants[variants.length - 1];
+        for (const v of variants) if (widthAt(v, pctSize) <= avail) { pctText = v; break; }
+        while (pctSize > 5 && widthAt(pctText, pctSize) > avail) pctSize--;
+        const heightFits = c.h >= tickerSize + pctSize + 4;
+        const showPct = widthAt(pctText, pctSize) <= avail && heightFits;
+        return (
+          '<div class="heatmap-cell" ' +
+          `style="left:${c.x}px;top:${c.y}px;width:${c.w}px;height:${c.h}px;background:${color}" ` +
+          `title="${esc(c.item.name)} · ${(pct >= 0 ? "+" : "") + pct.toFixed(2)}%">` +
+          `<span class="heatmap-cell__ticker" style="font-size:${tickerSize}px">${esc(displayLabel)}</span>` +
+          (showPct ? `<span class="heatmap-cell__pct" style="font-size:${pctSize}px">${pctText}</span>` : "") +
+          "</div>"
+        );
+      })
+      .join("");
+  }
+  let resizeTimer;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(render, 100);
+  });
+  window.renderHeatmap = render;
+})();
+function renderHeatmap() { if (window.renderHeatmap) window.renderHeatmap(); }
 
-  function updateQuote(rows) {
-    var priceEl = document.getElementById("mcapValue");
-    var deltaEl = document.getElementById("mcapChange");
-    if (!priceEl) return;
-    var total = 0;
-    var weighted = 0;
-    for (var i = 0; i < rows.length; i++) {
-      var c = rows[i];
-      if (isFinite(c.marketCap) && c.marketCap > 0) {
-        total += c.marketCap;
-        if (isFinite(c.change)) weighted += c.marketCap * c.change;
+// === Ticker carousel char-highlight (ported verbatim behaviour) ===
+(function carouselHighlight() {
+  const c = document.querySelector(".topbar__carousel");
+  if (!c) return;
+  const links = c.querySelectorAll("a");
+  links.forEach((lnk) => {
+    if (lnk.getAttribute("data-split") === "1") return;
+    lnk.setAttribute("data-split", "1");
+    const t = lnk.textContent;
+    const frag = document.createDocumentFragment();
+    for (let k = 0; k < t.length; k++) {
+      const s = document.createElement("span");
+      s.className = "tcc";
+      s.textContent = t.charAt(k);
+      frag.appendChild(s);
+    }
+    lnk.textContent = "";
+    lnk.appendChild(frag);
+  });
+  const HALF = 110;
+  function tick() {
+    const r = c.getBoundingClientRect();
+    if (r.width === 0) return;
+    const cx = r.left + r.width / 2;
+    const L = c.querySelectorAll("a");
+    for (const a of L) {
+      const lr = a.getBoundingClientRect();
+      if (lr.right < r.left - 50 || lr.left > r.right + 50) continue;
+      const chars = a.querySelectorAll(".tcc");
+      for (const ch of chars) {
+        const ar = ch.getBoundingClientRect();
+        const d = Math.abs(ar.left + ar.width / 2 - cx);
+        if (d > HALF) { ch.style.color = ""; continue; }
+        const t = d / HALF;
+        ch.style.color = `rgb(${Math.round(255 - 48 * t)},${Math.round(122 + 85 * t)},${Math.round(207 * t)})`;
       }
     }
-    if (total <= 0) return;
-    priceEl.textContent = fmtBig(total);
-    if (deltaEl) {
-      var avg = weighted / total;
-      deltaEl.textContent = fmtPct(avg);
-      deltaEl.classList.toggle("up", avg >= 0);
-      deltaEl.classList.toggle("down", avg < 0);
-    }
   }
-
-  function setStatus(msg) {
-    var el = document.getElementById("marketStatus");
-    if (el) el.textContent = msg;
-  }
-
-  var COINS = [];
-
-  function refresh() {
-    if (!COINS.length) return;
-    var ids = COINS.map(function (c) {
-      return c.coingeckoId;
-    }).filter(Boolean);
-    var meta = {};
-    COINS.forEach(function (c) {
-      meta[c.coingeckoId] = c;
-    });
-
-    fetchMarkets(ids)
-      .then(function (mk) {
-        if (!Array.isArray(mk)) throw new Error("bad payload");
-        var rows = mk.map(function (m) {
-          var base = meta[m.id] || {};
-          return {
-            symbol: (base.symbol || m.symbol || "").toUpperCase(),
-            name: base.name || m.name,
-            chain: base.chain || "",
-            price: m.current_price,
-            change: m.price_change_percentage_24h,
-            marketCap: m.market_cap,
-            volume: m.total_volume,
-          };
-        });
-        rows.sort(function (a, b) {
-          return (b.marketCap || 0) - (a.marketCap || 0);
-        });
-        renderTable(rows);
-        renderHeatmap(rows);
-        updateQuote(rows);
-        setStatus("");
-      })
-      .catch(function (e) {
-        setStatus("Live data unavailable — retrying…");
-      });
-  }
-
-  getJSON(COINS_URL)
-    .then(function (list) {
-      COINS = Array.isArray(list) ? list : [];
-      refresh();
-      setInterval(refresh, REFRESH_MS);
-    })
-    .catch(function () {
-      setStatus("Could not load coin list.");
-    });
+  setInterval(tick, 50);
+  tick();
 })();
+
+// === Keep --topbar-h in sync with the sticky topbar's height ===
+function syncTopbarHeight() {
+  const topbar = document.querySelector(".topbar");
+  if (!topbar) return;
+  const h = Math.round(topbar.getBoundingClientRect().height);
+  document.documentElement.style.setProperty("--topbar-h", `${h}px`);
+}
+
+// === Pager clicks ===
+document.addEventListener("click", (e) => {
+  if (e.target.closest("#pagerNext")) {
+    const cap = Math.min(marketCache.length, MAX_PAGES * PAGE_SIZE);
+    const maxPage = Math.max(0, Math.ceil(cap / PAGE_SIZE) - 1);
+    if (marketPage < maxPage) { marketPage++; renderMarket(); }
+  } else if (e.target.closest("#pagerPrev")) {
+    if (marketPage > 0) { marketPage--; renderMarket(); }
+  }
+});
+
+// Brand → scroll to top on home.
+document.querySelector(".topbar__brand .brand-link")?.addEventListener("click", (e) => {
+  const path = window.location.pathname;
+  if (path === "/" || path === "/index.html") {
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+});
+
+// === Boot ===
+const yearEl = document.getElementById("year");
+if (yearEl) yearEl.textContent = new Date().getFullYear();
+syncTopbarHeight();
+window.addEventListener("resize", syncTopbarHeight);
+window.addEventListener("load", syncTopbarHeight);
+
+loadMarket();
+setInterval(loadMarket, 60_000);
