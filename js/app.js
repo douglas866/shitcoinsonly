@@ -83,6 +83,7 @@ async function loadMarket() {
   try {
     const raw = await fetchMarkets();
     if (!Array.isArray(raw)) throw new Error("bad payload");
+    const seen = new Set();
     marketCache = raw
       .map((m) => ({
         symbol: (m.symbol || "").toUpperCase(),
@@ -93,7 +94,10 @@ async function loadMarket() {
         volume: m.total_volume,
       }))
       .filter((c) => isFinite(c.marketCap) && c.marketCap > 0)
-      .sort((a, b) => b.marketCap - a.marketCap);
+      .sort((a, b) => b.marketCap - a.marketCap)
+      // Dedupe by symbol (CoinGecko lists e.g. DOGE + Binance-Peg DOGE): keep
+      // the highest-market-cap instance, which sort() already placed first.
+      .filter((c) => (seen.has(c.symbol) ? false : (seen.add(c.symbol), true)));
     lastLoad = Date.now();
     renderMarket();
     renderMovers();
@@ -305,11 +309,15 @@ const heatmap = (function () {
       squarify(rest, x, y + rowH, w, h - rowH, out);
     }
   }
+  // Memecoins routinely move tens of percent intraday, so the reference's +/-5%
+  // clamp would paint almost every cell max green/red. Widen to +/-20% so the
+  // color channel still carries information across the pack.
   function colorForChange(pct) {
-    const clamped = Math.max(-5, Math.min(5, pct));
+    const CAP = 20;
+    const clamped = Math.max(-CAP, Math.min(CAP, pct));
     if (clamped === 0) return "#1a1a1a";
-    if (clamped > 0) { const t = clamped / 5; return `rgb(${Math.round(26 + 20 * (1 - t))},${Math.round(60 + 130 * t)},${Math.round(40 + 10 * (1 - t))})`; }
-    const t = -clamped / 5;
+    if (clamped > 0) { const t = clamped / CAP; return `rgb(${Math.round(26 + 20 * (1 - t))},${Math.round(60 + 130 * t)},${Math.round(40 + 10 * (1 - t))})`; }
+    const t = -clamped / CAP;
     return `rgb(${Math.round(80 + 130 * t)},${Math.round(30 + 10 * (1 - t))},${Math.round(30 + 10 * (1 - t))})`;
   }
   let items = [];
@@ -349,10 +357,20 @@ const heatmap = (function () {
   return { setItems, render };
 })();
 
+// Treemap area weight = sqrt(marketCap) + offset. sqrt compresses the DOGE-vs-
+// everyone gap (raw market cap makes small coins invisible slivers); the offset
+// (~14% of the largest cell's weight) guarantees a visible minimum cell. Mirrors
+// hodlingbtc's regen-heatmap.ps1 `sqrt(btc)+80` intent, scaled to market cap.
+function heatmapSize(mcap, maxCap) {
+  const offset = Math.sqrt(Math.max(1, maxCap)) * 0.14;
+  return Math.sqrt(Math.max(0, mcap || 0)) + offset;
+}
 function renderHeatmapFrom(coins) {
+  const maxCap = coins.reduce((m, c) => Math.max(m, c.marketCap || 0), 0);
   heatmap.setItems(coins.map((c) => ({
     label: c.symbol, ticker: c.symbol, name: c.name,
-    size: c.marketCap, changePct: isFinite(c.change) ? c.change : 0,
+    size: heatmapSize(c.marketCap, maxCap),
+    changePct: isFinite(c.change) ? c.change : 0,
   })));
   heatmap.render();
 }

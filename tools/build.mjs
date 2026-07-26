@@ -52,6 +52,7 @@ async function main() {
   const res = await fetch(CG, { headers: { accept: "application/json", "user-agent": "ShitcoinsOnly build" } });
   if (!res.ok) throw new Error("CoinGecko " + res.status);
   const raw = await res.json();
+  const seen = new Set();
   const coins = raw
     .map((m) => ({
       symbol: (m.symbol || "").toUpperCase(),
@@ -63,10 +64,18 @@ async function main() {
     }))
     .filter((c) => isFinite(c.marketCap) && c.marketCap > 0)
     .sort((a, b) => b.marketCap - a.marketCap)
+    .filter((c) => (seen.has(c.symbol) ? false : (seen.add(c.symbol), true)))
     .slice(0, 100);
 
+  // Compressed treemap weight so small coins stay visible (matches js/app.js).
+  const maxCap = coins.reduce((m, c) => Math.max(m, c.marketCap || 0), 0);
+  const hmOffset = Math.sqrt(Math.max(1, maxCap)) * 0.14;
+  const heatmapSize = (mcap) => Math.sqrt(Math.max(0, mcap || 0)) + hmOffset;
+
+  // Pre-hide rows 11+ so the no-JS / first-paint view is a clean 10-row page
+  // (matches hodlingbtc's data-rank-hidden pattern); JS re-renders per page.
   const rows = coins
-    .map((c, i) => `<tr data-rank="${i + 1}" data-symbol="${esc(c.symbol)}"><td class="num rank">${i + 1}</td><td class="ticker-cell"><span class="ticker-link">${esc(c.symbol)}</span></td><td class="company-cell col-name"><span class="company-link">${esc(c.name)}</span></td><td class="num col-price">${fmtPrice(c.price)}</td>${pctCell(c.change)}<td class="num">${fmtBig(c.marketCap)}</td></tr>`)
+    .map((c, i) => `<tr data-rank="${i + 1}" data-symbol="${esc(c.symbol)}"${i >= 10 ? " data-rank-hidden=\"\"" : ""}><td class="num rank">${i + 1}</td><td class="ticker-cell"><span class="ticker-link">${esc(c.symbol)}</span></td><td class="company-cell col-name"><span class="company-link">${esc(c.name)}</span></td><td class="num col-price">${fmtPrice(c.price)}</td>${pctCell(c.change)}<td class="num">${fmtBig(c.marketCap)}</td></tr>`)
     .join("");
 
   const movers = coins.filter((c) => isFinite(c.change));
@@ -82,10 +91,19 @@ async function main() {
     .map((c, i) => `<tr><td class="num rank">${i + 1}</td><td class="ticker-cell"><span class="ticker-link">${esc(c.symbol)}</span></td><td class="company-cell col-name"><span class="company-link">${esc(c.name)}</span></td><td class="num">${fmtBig(c.volume)}</td><td class="num">${fmtBig(c.marketCap)}</td></tr>`)
     .join("");
 
+  const nowIso = new Date().toISOString();
   const island = JSON.stringify({
-    updatedAt: new Date().toISOString(),
-    coins: coins.map((c) => ({ symbol: c.symbol, name: c.name, size: c.marketCap, changePct: isFinite(c.change) ? c.change : 0 })),
+    updatedAt: nowIso,
+    coins: coins.map((c) => ({ symbol: c.symbol, name: c.name, size: heatmapSize(c.marketCap), changePct: isFinite(c.change) ? c.change : 0 })),
   });
+  // Human-readable ET stamp for the SSR heatmap header (JS refreshes it live).
+  const etParts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", hour12: false,
+  }).formatToParts(new Date());
+  const et = {};
+  etParts.forEach((p) => (et[p.type] = p.value));
+  const updatedStamp = `${et.year}-${et.month}-${et.day} ${et.hour}:${et.minute} ET`;
 
   let html = await readFile(INDEX, "utf8");
   html = replaceBetween(html, "<!--SSR_ROWS_START-->", "<!--SSR_ROWS_END-->", rows);
@@ -93,6 +111,10 @@ async function main() {
   html = replaceBetween(html, "<!--SSR_LOSERS_START-->", "<!--SSR_LOSERS_END-->", moverRows(losers));
   html = replaceBetween(html, "<!--SSR_VOLUME_START-->", "<!--SSR_VOLUME_END-->", volRows);
   html = replaceBetween(html, "<!--SSR_HEATMAP_START-->", "<!--SSR_HEATMAP_END-->", island);
+  html = html.replace(
+    /<time id="heatmapUpdated"[^>]*>[^<]*<\/time>/,
+    `<time id="heatmapUpdated" class="heatmap-meta" datetime="${nowIso}">${updatedStamp}</time>`
+  );
   await writeFile(INDEX, html, "utf8");
 
   console.log(`Baked snapshot: ${coins.length} coins, ${gainers.length} gainers, ${losers.length} losers, ${volume.length} by volume.`);
