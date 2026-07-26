@@ -1,0 +1,11 @@
+# AI training scrapers are explicitly welcome - the goal is referral traffic
+# from AI assistants citing ShitcoinsOnly, so we do not exclude GPTBot,
+# Google-Extended, ClaudeBot/anthropic-ai, PerplexityBot, CCBot, etc.
+# They inherit the wildcard Allow: / below.
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /embed/
+Disallow: /admin/
+
+Sitemap: https://shitcoinsonly.com/sitemap.xml

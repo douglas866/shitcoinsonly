@@ -1,0 +1,3029 @@
+:root {
+  --bg: #0a0a0a;
+  --bg-elev: #111111;
+  --bg-row: #181818;
+  --border: #1f1f1f;
+  --border-strong: #2c2c2c;
+  --text: #f2f2f2;
+  --text-dim: #b4b4b4;
+  --text-faint: #777;
+  --accent: #ff7a00;
+  --accent-soft: rgba(255, 122, 0, 0.12);
+  --warn: #d97706;
+  --up: #22c55e;
+  --down: #ef4444;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", "Consolas", "Roboto Mono", Menlo, monospace;
+  --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --maxw: 1400px;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  /* Anchor-link scrolls (e.g. /#holdings) leave this much space at the top so
+     the destination heading clears the sticky topbar with extra breathing
+     room. Falls back to 60px when the JS-set --topbar-h is not yet available. */
+  scroll-padding-top: calc(var(--topbar-h, 60px) + 32px);
+}
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 18px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+button { font-family: inherit; }
+
+/* === Topbar === */
+.topbar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 20px;
+  padding: 10px 28px;
+  background: #000;
+  border-bottom: 1px solid var(--border-strong);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+/* Sticky topbar covers the page; anchor links must offset so the target
+ * panel's top edge lands at the topbar's bottom edge, not under it. */
+.panel,
+#atm,
+#history,
+#holdings,
+#heatmap,
+#filings,
+#preferred,
+#calculator,
+#insider-panel,
+#stories {
+  scroll-margin-top: 64px;
+}
+@media (max-width: 720px) {
+  .panel, #atm, #history, #holdings, #heatmap, #filings, #preferred,
+  #calculator, #insider-panel, #stories { scroll-margin-top: 56px; }
+}
+.topbar__brand { justify-self: start; }
+.topbar__nav { justify-self: center; }
+.topbar__status {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-faint);
+  letter-spacing: 0.16em;
+}
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--up);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.55);
+  animation: live-pulse 2s ease-in-out infinite;
+}
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+.status-text { color: var(--up); font-weight: 600; }
+.status-time { color: var(--text-faint); }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.brand-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+.brand-link:hover { text-decoration: none; }
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px;
+  font-family: var(--mono);
+  font-size: 15px;
+  color: var(--text-faint);
+  letter-spacing: 0.08em;
+}
+.breadcrumb a {
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: color 0.12s ease;
+}
+.breadcrumb a:hover { color: var(--accent); }
+.breadcrumb__current { color: var(--accent); font-weight: 600; }
+
+.footer-link {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.12s ease;
+}
+.footer-link:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  text-decoration: none;
+}
+.footer a,
+.footer a:visited {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* === Legal docs (privacy, terms) === */
+.legal-doc {
+  padding: 32px 36px 40px;
+  max-width: 780px;
+}
+.legal-doc__meta {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--text-faint);
+  margin: 0 0 24px;
+  text-transform: uppercase;
+}
+.legal-doc h3 {
+  margin: 28px 0 10px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--text);
+  text-transform: uppercase;
+  font-family: var(--mono);
+}
+.legal-doc p {
+  margin: 0 0 14px;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text-dim);
+}
+.legal-doc a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.12s ease;
+}
+.legal-doc a:hover { border-bottom-color: var(--accent); }
+
+@media (max-width: 720px) {
+  .legal-doc { padding: 20px 18px 28px; }
+  .legal-doc p { font-size: 14px; }
+  .legal-doc h3 { font-size: 13px; }
+}
+
+/* === Contact form === */
+.contact-doc {
+  padding: 32px 36px 40px;
+  max-width: 720px;
+}
+.contact-doc__intro {
+  margin: 0 0 28px;
+  font-size: 16px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.contact-form__row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.contact-form__label {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--text-faint);
+}
+.contact-form__req { color: var(--accent); }
+.contact-form input[type="text"],
+.contact-form input[type="email"],
+.contact-form select,
+.contact-form textarea {
+  background: #0c0c0c;
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  padding: 12px 14px;
+  border-radius: 3px;
+  transition: border-color 0.12s ease, background 0.12s ease;
+  resize: vertical;
+}
+.contact-form input:focus,
+.contact-form select:focus,
+.contact-form textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: #111;
+}
+.contact-form__honeypot {
+  position: absolute;
+  left: -10000px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.contact-form__submit {
+  align-self: flex-start;
+  background: var(--accent);
+  color: #000;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.16em;
+  padding: 14px 28px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.12s ease, transform 0.05s ease;
+}
+.contact-form__submit:hover:not(:disabled) { background: #ff9530; }
+.contact-form__submit:active:not(:disabled) { transform: translateY(1px); }
+.contact-form__submit:disabled { opacity: 0.5; cursor: wait; }
+
+.contact-form__status {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+}
+.contact-form__status--ok    { color: var(--up); }
+.contact-form__status--error { color: var(--down); }
+
+@media (max-width: 720px) {
+  .contact-doc { padding: 20px 18px 28px; }
+  .contact-doc__intro { font-size: 14px; }
+  .contact-form input,
+  .contact-form select,
+  .contact-form textarea { font-size: 14px; padding: 10px 12px; }
+  .contact-form__submit { padding: 12px 20px; font-size: 12px; }
+}
+
+/* Clickable company name in holdings table */
+.company-link {
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.12s ease, color 0.12s ease;
+}
+.company-link:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  text-decoration: none;
+}
+.ticker-link {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.12s ease;
+  font-family: var(--mono, ui-monospace, "Cascadia Mono", monospace);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.ticker-link:hover {
+  border-bottom-color: var(--accent);
+  text-decoration: none;
+}
+
+/* === Company page === */
+.company-hero {
+  padding: 32px 32px 28px;
+}
+/* Two-column grid with explicit row tracks so the stat card can be aligned
+   against the name + description range only (not the ticker badge above or
+   the website link below). Ticker badge sits in row 1 like a small header;
+   name in row 2; description in row 3; website in row 4. The stat card
+   spans rows 2-3 in column 2 and centres vertically within that range. */
+.company-hero__head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto auto auto;
+  column-gap: 32px;
+  row-gap: 0;
+  align-items: start;
+}
+.company-hero__id {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.company-hero__name    { grid-column: 1; grid-row: 2; }
+.company-hero__desc    { grid-column: 1; grid-row: 3; }
+.company-hero__website { grid-column: 1; grid-row: 4; }
+.company-hero__btc {
+  grid-column: 2;
+  grid-row: 2 / 4;
+  align-self: center;
+  justify-self: end;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  padding-left: 0;
+  border-left: 0;
+  text-align: right;
+}
+/* Each stat group is a label span followed by a value span. The +adjacent
+   selector adds the inter-group margin above the label of every group except
+   the first, so 1-stat pages (no MARKET CAP cached) get zero extra space. */
+.company-hero__btc-label {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+.company-hero__btc-value {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+.company-hero__btc-value + .company-hero__btc-label {
+  margin-top: 14px;
+}
+@media (max-width: 620px) {
+  .company-hero__head { grid-template-columns: 1fr; }
+  .company-hero__btc {
+    grid-column: 1;
+    grid-row: auto;
+    align-self: auto;
+    justify-self: stretch;
+    align-items: flex-start;
+    text-align: left;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .company-hero__btc-label { font-size: 14px; }
+  .company-hero__btc-value { font-size: 19px; }
+}
+
+/* Clickable panel title (e.g. BITCOIN EXPOSURE CALCULATOR header that links to the dedicated calc page) */
+.panel__title-link {
+  display: inline-block;
+  text-decoration: none;
+  color: inherit;
+  transition: color 0.15s ease;
+}
+.panel__title-link:hover .panel__title { color: var(--accent); }
+.company-hero__ticker {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+  padding: 4px 10px;
+  background: var(--accent-soft);
+  border-radius: 3px;
+}
+.company-hero__flag { font-size: 24px; line-height: 1; }
+.company-hero__name {
+  margin: 0 0 12px;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--text);
+}
+.company-hero__desc {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-dim);
+  max-width: 780px;
+}
+.company-hero__website {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  padding-bottom: 1px;
+  transition: border-color 0.12s ease;
+  width: fit-content;
+}
+.company-hero__website::before {
+  content: "→";
+  font-size: 14px;
+  line-height: 1;
+}
+.company-hero__website:hover {
+  border-bottom-color: var(--accent);
+  text-decoration: none;
+}
+
+.company-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1px;
+  background: var(--border);
+}
+.stat {
+  background: var(--bg-elev);
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.stat__label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: var(--text-faint);
+  text-transform: uppercase;
+}
+.stat__value {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.005em;
+}
+.stat__delta {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.stat__delta.up   { color: var(--up); }
+.stat__delta.down { color: var(--down); }
+
+.preferreds {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1px;
+  background: var(--border);
+}
+.pref-quote {
+  background: var(--bg-elev);
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--mono);
+}
+.pref-quote__sym {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.06em;
+}
+.pref-quote__price {
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.pref-quote__delta {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.pref-quote__delta.up   { color: var(--up); }
+.pref-quote__delta.down { color: var(--down); }
+
+@media (max-width: 720px) {
+  .company-hero { padding: 22px 18px 20px; }
+  .company-hero__name { font-size: 24px; }
+  .company-hero__desc { font-size: 14px; }
+  .stat { padding: 16px 16px; }
+  .stat__value { font-size: 17px; }
+  .pref-quote { padding: 14px 16px; }
+  .pref-quote__price { font-size: 16px; }
+}
+
+/* === History chart === */
+.chart-wrap {
+  position: relative;
+  padding: 24px 28px;
+  height: 460px;
+}
+.chart-wrap--company {
+  height: 340px;
+}
+.chart-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.chart-return {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-faint);
+  min-width: 70px;
+  text-align: right;
+}
+.chart-return.up { color: var(--up); }
+.chart-return.down { color: var(--down); }
+@media (max-width: 720px) {
+  .chart-wrap--company { height: 240px; padding: 16px 14px; }
+}
+.chart-watermark {
+  position: absolute;
+  bottom: 14px;
+  right: 22px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-faint);
+  letter-spacing: 0.18em;
+  pointer-events: none;
+  opacity: 0.55;
+}
+/* === Company share-price panel ===
+   Chart canvas reuses .chart-wrap--company; the range buttons reuse
+   .chart-filters / .chart-filter below. Only the header readout and footnote
+   are specific to this panel. */
+.company-price-chart .chart-filters {
+  padding: 0 28px;
+}
+/* Last price + the day's move, inline to the right of the company name.
+   Sized in em so it tracks .company-hero__name at every breakpoint. The spans
+   are empty until js/price-chart.js hydrates them, and :empty keeps the gap
+   from showing before that (and forever, if the fetch fails). nowrap keeps the
+   quote itself intact; it may wrap below a long company name on a phone, which
+   is the correct trade against overflow. */
+.company-hero__quote {
+  font-family: var(--mono);
+  font-size: 0.58em;
+  font-weight: 700;
+  letter-spacing: 0;
+  white-space: nowrap;
+  margin-left: 12px;
+  vertical-align: middle;
+  font-variant-numeric: tabular-nums;
+}
+.company-hero__quote:empty { display: none; }
+.company-hero__quote #priceLast { color: var(--text); }
+.price-chart__change {
+  margin-left: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.price-chart__change.is-up { color: var(--up); }
+.price-chart__change.is-down { color: var(--down); }
+@media (max-width: 620px) {
+  .company-hero__quote { font-size: 0.62em; margin-left: 10px; }
+}
+.price-chart__foot,
+.price-chart__note {
+  margin: 0;
+  padding: 0 28px 24px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.price-chart__exchange:not(:empty)::before { content: " \00b7 "; }
+@media (max-width: 720px) {
+  .company-price-chart .chart-filters {
+    padding: 0 18px;
+  }
+  .company-price-chart .chart-filter {
+    flex: 1;
+    padding: 8px 0;
+    text-align: center;
+  }
+  .price-chart__foot,
+  .price-chart__note {
+    padding: 0 18px 18px;
+  }
+}
+
+.chart-filters {
+  display: flex;
+  gap: 4px;
+}
+.chart-filter {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  padding: 6px 12px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.12s ease;
+}
+.chart-filter:hover { color: var(--text); border-color: var(--accent); }
+.chart-filter.is-active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.chart-milestones {
+  list-style: none;
+  margin: 0;
+  padding: 24px 28px 28px;
+  border-top: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px 28px;
+}
+.chart-milestones li {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 14px;
+  border-left: 2px solid var(--accent);
+}
+.chart-milestone__date {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.chart-milestone__label {
+  font-size: 14px;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+@media (max-width: 720px) {
+  .chart-wrap { padding: 16px 14px; height: 360px; }
+  .chart-milestones { padding: 18px 18px 22px; gap: 10px 18px; }
+}
+
+/* === Embed instructions page === */
+.embed-doc {
+  padding: 28px 32px;
+}
+.embed-doc__intro,
+.embed-doc__note {
+  margin: 0 0 24px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-dim);
+  max-width: 780px;
+}
+.embed-doc__note { margin-top: 10px; font-size: 13px; color: var(--text-faint); }
+.embed-variants {
+  display: grid;
+  gap: 28px;
+}
+.embed-variant__title {
+  margin: 0 0 12px;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: var(--text);
+}
+.embed-variant__dim { color: var(--text-faint); margin-left: 8px; font-weight: 500; }
+.embed-variant__preview {
+  background: #0c0c0c;
+  border: 1px solid var(--border-strong);
+  padding: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.embed-variant__preview iframe {
+  display: block;
+  border: 0;
+  background: transparent;
+}
+.embed-variant__code {
+  background: #0c0c0c;
+  border: 1px solid var(--border);
+  padding: 14px 16px;
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text);
+  overflow-x: auto;
+  line-height: 1.5;
+  white-space: pre;
+  letter-spacing: 0;
+}
+
+@media (max-width: 720px) {
+  .embed-doc { padding: 18px 16px; }
+  .embed-variant__code { font-size: 11px; padding: 12px; }
+  .embed-variant__preview { padding: 10px; }
+}
+.topbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand__mark {
+  background: var(--accent);
+  color: #000;
+  padding: 3px 8px;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+.brand__name {
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.16em;
+  color: var(--text);
+}
+
+.topbar__nav {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+}
+.topbar__nav a {
+  color: var(--text-dim);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  padding: 2px 0;
+  border-bottom: 1px solid transparent;
+  line-height: 1;
+}
+.topbar__nav a:hover {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+  text-decoration: none;
+}
+
+/* === Topbar middle column hosts the live BTC quote (price + day change).
+ * The section carousel moved DOWN one row, into the .ticker strip below. === */
+.topbar__quote {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 14px;
+  justify-self: center;
+  font-family: "IBM Plex Mono", ui-monospace, "Cascadia Mono", "Consolas", monospace;
+  letter-spacing: 0.06em;
+}
+.topbar__quote .quote__label {
+  font-size: 13px;
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+.topbar__quote .quote__value {
+  font-size: 18px;
+  color: var(--text);
+  font-weight: 700;
+}
+.topbar__quote .quote__delta {
+  font-size: 14px;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+.topbar__quote .quote__delta.up   { color: #2dbf6c; }
+.topbar__quote .quote__delta.down { color: #e44545; }
+@media (max-width: 720px) {
+  .topbar__quote { gap: 8px; }
+  .topbar__quote .quote__label { font-size: 11px; letter-spacing: 0.1em; }
+  .topbar__quote .quote__value { font-size: 14px; }
+  .topbar__quote .quote__delta { font-size: 12px; }
+}
+@media (max-width: 420px) {
+  .topbar__quote .quote__label { font-size: 10px; }
+  .topbar__quote .quote__value { font-size: 12px; }
+  .topbar__quote .quote__delta { font-size: 10.5px; }
+}
+
+/* === Section carousel: now lives inside <section class="ticker"> directly
+ * below the topbar. Sticky-stacks under topbar so navigation stays in view
+ * while scrolling. Track is duplicated 2x for a seamless infinite loop. === */
+.ticker {
+  display: block;
+  padding: 0;
+  background: #050505;
+  border-bottom: 1px solid var(--border-strong);
+  position: sticky;
+  top: var(--topbar-h, 54px);
+  z-index: 9;
+}
+.topbar__carousel {
+  min-width: 0;
+  overflow: hidden;
+  padding: 10px 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 36px, #000 calc(100% - 36px), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 36px, #000 calc(100% - 36px), transparent 100%);
+}
+.topbar__carousel-track {
+  display: inline-flex;
+  align-items: center;
+  gap: 44px;
+  white-space: nowrap;
+  animation: topbar-carousel 46s linear infinite; /* +25% faster (61s -> 46s) */
+  will-change: transform;
+}
+.topbar__carousel a {
+  color: #cfcfcf;
+  text-decoration: none;
+  font-family: "IBM Plex Mono", ui-monospace, "Cascadia Mono", "Consolas", monospace;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  line-height: 1;
+  padding: 4px 2px;
+  flex: 0 0 auto;
+}
+.topbar__carousel a:focus-visible { outline: none; }
+/* Per-character spotlight: the inline #topbar-carousel-highlight script
+ * wraps every character in <span class="tcc"> and sets per-character color
+ * based on distance from the carousel viewport's centre. Result: a soft
+ * orange "bubble" moves across letters as the track scrolls, instead of
+ * whole-word toggling. The 80 ms CSS transition smooths any tiny stepping
+ * between the JS tick (50 ms) and the GPU-driven track animation (60 fps). */
+.topbar__carousel .tcc {
+  transition: color 80ms linear;
+}
+/* Hover behaviour: any character pointed at becomes orange and STAYS
+ * orange for as long as the cursor is on it. The JS tick keeps writing
+ * its interpolated color to style.color on every char, but !important
+ * here overrides that inline value so the hovered char freezes at the
+ * accent colour. The track animation is untouched — the carousel never
+ * stops moving. Removing the cursor lets the JS-driven color take over
+ * again immediately, and the seamless letter-by-letter spotlight resumes. */
+.topbar__carousel .tcc:hover {
+  color: var(--accent) !important;
+}
+@keyframes topbar-carousel {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .topbar__carousel-track { animation: none; }
+  .topbar__carousel { overflow-x: auto; }
+  .topbar__carousel .tcc { transition: none; }
+}
+@media (max-width: 720px) {
+  .topbar__carousel-track { gap: 30px; animation-duration: 36s; } /* +25% faster (48s -> 36s) */
+  .topbar__carousel a { font-size: 12px; letter-spacing: 0.08em; padding: 3px 1px; }
+  /* Homepage PUBLIC PREFERRED SHARES panel heading: drop the leading
+   * "PUBLIC "/"PUBLIKA " on mobile so the rest fits on one line. */
+  .pref-shares .pref-shares__prefix { display: none; }
+}
+
+/* === Old standalone ticker/quote styles removed: the BTC quote now lives
+ * inside .topbar via .topbar__quote, and the .ticker section now contains
+ * the section carousel instead of the BTC price. See .topbar__quote and
+ * .topbar__carousel above. === */
+
+/* === Layout === */
+.layout {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  padding: 40px;
+  max-width: var(--maxw);
+  margin: 0 auto;
+}
+.panel {
+  background: var(--bg-elev);
+  border: 1px solid var(--border-strong);
+}
+
+.panel__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  padding: 26px 32px;
+  border-bottom: 1px solid var(--border-strong);
+}
+.panel__aside {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color .12s ease;
+}
+.panel__aside:hover { color: var(--accent); }
+.panel__title {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  /* The heading carries the orange now and the tick is white -- the reverse of
+     the original, applied here so every panel on every page follows. */
+  color: var(--accent);
+  text-transform: uppercase;
+}
+.panel__title::before {
+  content: "";
+  display: inline-block;
+  width: 3px;
+  height: 0.95em;
+  margin-right: 12px;
+  background: var(--text);
+  vertical-align: -0.1em;
+}
+.panel__hint {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  padding: 6px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  font-weight: 600;
+}
+.panel__hint--warn {
+  color: var(--warn);
+  border-color: var(--warn);
+}
+
+/* === Pager === */
+.pager {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.pager__label {
+  font-family: var(--mono);
+  font-size: 15px;
+  color: var(--text-dim);
+  letter-spacing: 0.06em;
+  min-width: 110px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+.pager__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid var(--border-strong);
+  cursor: pointer;
+  transition: all 0.12s ease;
+  border-radius: 3px;
+}
+.pager__btn:hover:not(:disabled) {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.pager__btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+.pager__btn[hidden] { display: none; }
+
+/* === Data table === */
+.table-wrap { overflow-x: auto; }
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 17px;
+}
+.data-table th,
+.data-table td {
+  padding: 20px 28px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.data-table tbody tr:last-child td { border-bottom: none; }
+.data-table th {
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  color: var(--text-faint);
+  background: #0c0c0c;
+  text-transform: uppercase;
+}
+.data-table td.num,
+.data-table th.num {
+  text-align: right;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+.data-table tbody tr:hover { background: var(--bg-row); }
+.data-table .rank {
+  color: var(--text-faint);
+  font-weight: 500;
+  font-size: 16px;
+}
+.data-table .ticker-cell {
+  font-family: var(--mono);
+  color: var(--accent);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  font-size: 16px;
+}
+.data-table .company-cell {
+  color: var(--text);
+  font-weight: 500;
+  font-size: 17px;
+  white-space: normal;
+  line-height: 1.35;
+}
+.company-cell__name {
+  color: var(--text);
+  font-weight: 500;
+}
+.company-cell__summary {
+  color: var(--text-dim);
+  font-size: 14px;
+  font-weight: 400;
+  margin-top: 4px;
+  font-family: var(--sans);
+  /* Clamp every filing summary to 2 lines so row heights stay uniform
+     across the table. Without this, multi-paragraph Japanese press
+     titles produced 4-5 line rows next to single-line SEC 8-K rows
+     and the SOURCE column's vertical-centre line drifted row to row.
+     Standards-track line-clamp falls back gracefully on older
+     engines via the -webkit-* prefix path. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+}
+.data-table .country-cell {
+  font-size: 23px;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+/* === Filings table — reuses .data-table for visual consistency with holdings === */
+.data-table--clickable tbody tr {
+  cursor: pointer;
+}
+.data-table .source-cell {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
+  text-transform: uppercase;
+}
+.data-table .date-cell {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* === Stories === */
+.stories {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  padding: 28px;
+}
+.story {
+  position: relative;
+  background: #0c0c0c;
+  border: 1px solid var(--border-strong);
+  padding: 28px 30px 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  cursor: pointer;
+  max-height: 340px;
+  overflow: hidden;
+  transition: max-height 0.45s ease, background 0.2s ease;
+}
+.story:hover { background: #111; }
+.story.is-expanded {
+  max-height: 6000px;
+}
+.story::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 40px;
+  height: 90px;
+  background: linear-gradient(to bottom, transparent, #0c0c0c 90%);
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.story:hover::after {
+  background: linear-gradient(to bottom, transparent, #111 90%);
+}
+.story.is-expanded::after { opacity: 0; }
+.story__expand {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 14px 30px;
+  background: #0c0c0c;
+  border-top: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.story:hover .story__expand { background: #111; }
+.story:not(.is-expanded) .story__expand::before { content: "READ MORE →"; }
+.story.is-expanded .story__expand::before { content: "← COLLAPSE"; }
+
+.story__kicker {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  color: var(--accent);
+  font-weight: 600;
+}
+.story__title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+.story__meta {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--text-dim);
+}
+.story__body p {
+  margin: 0 0 14px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--text-dim);
+}
+.story__body p:last-child { margin-bottom: 0; }
+.story__body .story__h2 {
+  margin: 22px 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--text);
+  text-transform: uppercase;
+  font-family: var(--mono);
+}
+.story__body .story__h2:first-child { margin-top: 0; }
+.story__title-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+.story__title-link:hover .story__title { color: var(--accent); }
+
+/* === Standalone article page === */
+.article-page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 48px 48px 64px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border-strong);
+}
+.article-page__head { margin-bottom: 32px; }
+.article-page__kicker {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.article-page__meta {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin: 0 0 16px;
+}
+.article-page__title {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text);
+  letter-spacing: -0.005em;
+}
+.article-page__body p {
+  margin: 0 0 16px;
+  font-size: 16px;
+  line-height: 1.75;
+  color: var(--text-dim);
+}
+.article-page__body h2 {
+  margin: 36px 0 14px;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--text);
+  text-transform: uppercase;
+  font-family: var(--mono);
+}
+.article-page__body h2:first-child { margin-top: 0; }
+@media (max-width: 720px) {
+  .article-page { padding: 28px 20px 40px; }
+  .article-page__title { font-size: 22px; }
+  .article-page__body p { font-size: 14px; line-height: 1.7; }
+  .article-page__body h2 { font-size: 14px; }
+}
+
+@media (max-width: 960px) {
+  .stories { grid-template-columns: 1fr; padding: 18px; gap: 18px; }
+  .story { padding: 22px 22px 48px; max-height: 300px; }
+}
+
+/* === Articles === */
+.articles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 1px;
+  background: var(--border);
+}
+.article {
+  background: var(--bg-elev);
+  padding: 32px 32px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 220px;
+}
+.article__kicker {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.22em;
+  color: var(--accent);
+  font-weight: 600;
+}
+.article__title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+.article__excerpt {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 17px;
+  line-height: 1.6;
+}
+.article__meta {
+  margin-top: auto;
+  padding-top: 12px;
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  color: var(--text-faint);
+}
+
+/* === Footer === */
+.footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 22px 36px 26px;
+  border-top: 1px solid var(--border-strong);
+  background: #000;
+  font-family: var(--mono);
+  color: var(--text-faint);
+  line-height: 1.55;
+}
+.footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px 10px;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+}
+.footer__sep {
+  color: var(--text-faint);
+  opacity: 0.55;
+  user-select: none;
+}
+.footer__source {
+  color: var(--text-faint);
+  letter-spacing: 0.14em;
+}
+.footer__legal {
+  margin: 0;
+  max-width: 1040px;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  line-height: 1.65;
+  color: var(--text-faint);
+  text-align: center;
+}
+
+.loading {
+  text-align: center;
+  color: var(--text-faint);
+  padding: 48px !important;
+  font-family: var(--mono);
+  font-size: 14px;
+  letter-spacing: 0.18em;
+}
+
+/* === Bitcoin Exposure Calculator === */
+.calc {
+  padding: 28px 32px 32px;
+}
+.calc__inputs {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.calc__field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 280px;
+}
+.calc__field[hidden] { display: none; }
+.calc__label {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+.calc__select,
+.calc__input {
+  font-family: var(--mono);
+  font-size: 15px;
+  color: var(--text);
+  background: #050505;
+  border: 1px solid var(--border-strong);
+  padding: 12px 14px;
+  width: 100%;
+  border-radius: 0;
+  appearance: none;
+}
+.calc__select:focus,
+.calc__input:focus {
+  outline: none;
+  border-color: var(--text-dim);
+}
+.calc__select option:disabled { color: var(--text-faint); }
+.calc__combo { position: relative; }
+.calc__options {
+  position: absolute;
+  top: calc(100% - 1px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: #050505;
+  border: 1px solid var(--border-strong);
+  max-height: 280px;
+  overflow-y: auto;
+  z-index: 30;
+}
+.calc__option {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--text-dim);
+  padding: 10px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.calc__option:hover,
+.calc__option.is-active {
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+}
+.calc__option-empty {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text-faint);
+  padding: 10px 14px;
+}
+.calc__modes {
+  display: inline-flex;
+  border: 1px solid var(--border-strong);
+  margin-bottom: 22px;
+}
+.calc__mode {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  background: transparent;
+  border: 0;
+  padding: 11px 20px;
+  cursor: pointer;
+}
+.calc__mode + .calc__mode { border-left: 1px solid var(--border-strong); }
+.calc__mode.is-active { background: var(--text); color: #050505; }
+.calc__mode-label {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: var(--accent);
+  color: #fff;
+  padding: 9px 22px;
+  margin: 0 0 22px 0;
+  border: 1px solid var(--accent);
+}
+.calc__investrow { display: flex; align-items: stretch; }
+.calc__investrow .calc__input { flex: 1 1 auto; }
+.calc__ccy-tag {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  padding: 0 16px;
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid var(--border-strong);
+  border-left: 0;
+}
+.calc__output {
+  border: 1px solid var(--border-strong);
+  background: #050505;
+}
+.calc__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 20px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.calc__row:last-child { border-bottom: 0; }
+.calc__row--hl { background: transparent; }
+/* All result rows (facts grid AND answer block, except the highlight value)
+   share the same label and value typography so the block reads as one
+   consistent ladder. */
+.calc__rlabel {
+  font-family: var(--mono);
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+.calc__rval {
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Facts grid (Group A): same typography as .calc__row, laid out as a 2-up grid. */
+.calc__facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+}
+.calc__fact {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 18px;
+  background: #050505;
+}
+.calc__fact .calc__rlabel {
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+}
+.calc__fact .calc__rval {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+/* Highlight row: orange text only, no orange fill. Box background matches the
+   rest of the calc output. */
+.calc__answer { border-top: 1px solid var(--border-strong); }
+.calc__answer .calc__row--hl {
+  background: transparent;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.calc__answer .calc__row--hl .calc__rlabel { color: var(--accent); font-weight: 700; }
+.calc__answer .calc__row--hl .calc__rval { color: var(--accent); font-size: 20px; font-weight: 700; }
+
+@media (max-width: 540px) {
+  .calc__facts { grid-template-columns: 1fr; }
+  .calc__fact { flex-direction: column; align-items: flex-start; gap: 4px; }
+}
+
+.calc__note {
+  padding: 10px 18px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--warn);
+  border-top: 1px solid var(--border);
+}
+/* No box of its own. It used to sit in a bordered, accent-ruled panel of its own
+   below the output, which spent a lot of height saying very little. It is a
+   footnote to the black result box above it, so it now reads as one. */
+.calc__disclaimer {
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  max-width: 760px;
+}
+.calc__copy {
+  margin-top: 18px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  padding: 10px 18px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: border-color 140ms ease;
+}
+.calc__copy:hover { border-color: var(--text); }
+/* Per-ticker landing pages: accent H1, About text under it, FAQ heading */
+.panel__title--accent { color: var(--accent); }
+/* Doubled-class selectors here boost specificity to (0,2,1) so they win
+   against the later-defined `.seo-content h2 { color: var(--text); }` rule
+   without resorting to !important. */
+.seo-content.seo-content--accent h2,
+.seo-content.seo-content--accent h3 { color: var(--accent); }
+.seo-content.seo-content--accent .ci__ticker { color: var(--accent); }
+.calc-intro,
+.calc-about {
+  margin: 0;
+  padding: 18px 32px 22px;
+  color: var(--text);
+  line-height: 1.7;
+  font-size: 1.2em;
+  font-size: 15px;
+}
+.calc-intro[hidden],
+.calc-about[hidden] { display: none; }
+.seo-content h2.faq-title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+}
+.seo-content h2.faq-title::before {
+  content: "";
+  display: inline-block;
+  width: 3px;
+  height: 0.95em;
+  margin-right: 12px;
+  background: var(--accent);
+  vertical-align: -0.1em;
+}
+@media (max-width: 720px) {
+  .calc { padding: 20px 16px 24px; }
+  .calc__inputs { flex-direction: column; gap: 16px; }
+  .calc__field { flex: 1 1 auto; }
+  .calc__row { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .calc__rval { text-align: left; }
+  .calc-intro,
+  .calc-about { padding: 16px 16px 18px; }
+}
+
+/* === Calculator SEO content === */
+.seo-content { padding: 28px 32px 36px; }
+.seo-content p { color: var(--text-dim); line-height: 1.7; font-size: 15px; max-width: 820px; margin: 0 0 18px; }
+.seo-content p.seo-lead { color: var(--text); font-size: 16px; }
+.seo-content h2 {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text);
+  margin: 30px 0 12px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+.seo-content h2:first-of-type { border-top: 0; padding-top: 0; margin-top: 8px; }
+.company-index {
+  list-style: none;
+  margin: 8px 0 6px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 2px;
+}
+.company-index a {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 10px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 13px;
+  border: 1px solid transparent;
+}
+.company-index a:hover { color: var(--text); border-color: var(--border-strong); background: #050505; }
+.ci__ticker { color: var(--text); font-weight: 600; flex: 0 0 auto; min-width: 66px; }
+.ci__name { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ci__country { color: var(--text-faint); flex: 0 0 auto; }
+.faq { margin-top: 4px; }
+.faq__item { border-top: 1px solid var(--border); padding: 16px 0; }
+.faq__item:first-child { border-top: 0; padding-top: 4px; }
+.faq__q { font-family: var(--mono); font-size: 14px; font-weight: 600; color: var(--text); margin: 0 0 8px; letter-spacing: 0.02em; }
+.seo-content.seo-content--accent .faq__q { color: var(--accent); }
+.faq__a { color: var(--text-dim); line-height: 1.7; font-size: 15px; margin: 0; max-width: 820px; }
+@media (max-width: 720px) {
+  .seo-content { padding: 20px 16px 28px; }
+  .company-index { grid-template-columns: 1fr 1fr; }
+  .ci__name { font-size: 12px; }
+}
+
+/* === Responsive === */
+@media (max-width: 1024px) {
+  .layout { padding: 24px; gap: 24px; }
+  .ticker { padding: 12px 20px; gap: 24px; }
+  .data-table th, .data-table td { padding: 16px 20px; }
+  .topbar { padding: 10px 20px; gap: 20px; }
+}
+
+@media (max-width: 720px) {
+  body { font-size: 15px; }
+  .topbar__status { display: none; }
+  .status-time { display: none; }
+
+  .ticker {
+    padding: 9px 10px;
+    gap: 10px;
+    flex-wrap: nowrap;
+    justify-content: center;
+  }
+  .quote { gap: 4px; min-width: 0; flex-shrink: 1; }
+  .quote__label { font-size: 10px; letter-spacing: 0.06em; gap: 3px; }
+  .quote__sub { display: none; }
+  .quote__value { font-size: 11px; letter-spacing: -0.01em; }
+  .quote__delta { font-size: 10px; padding: 1px 4px; }
+
+  .panel__head { padding: 16px 16px; gap: 10px; }
+  .panel__title { font-size: 13px; letter-spacing: 0.1em; }
+  .panel__title::before { margin-right: 9px; }
+  /* keep these section headings on one line on mobile (the long calc-page H1s may still wrap) */
+  #holdings .panel__title, #filings .panel__title, #atm .panel__title, #history .panel__title { white-space: nowrap; }
+  .pager { gap: 8px; flex-shrink: 0; }
+  .pager__btn { width: 34px; height: 34px; }
+  .pager__label { font-size: 12px; min-width: 0; white-space: nowrap; }
+  /* history: title on its own line, time-range filters in an even row below */
+  #history .panel__head { flex-direction: column; align-items: stretch; gap: 12px; }
+  #history .chart-filters { width: 100%; }
+  #history .chart-filter { flex: 1; text-align: center; }
+
+  /* Tables: fit within viewport, no horizontal scroll */
+  .table-wrap { overflow-x: hidden; }
+  .data-table { font-size: 13px; table-layout: fixed; width: 100%; }
+  .data-table th, .data-table td { padding: 10px 6px; }
+  .data-table th { font-size: 10px; letter-spacing: 0.1em; }
+  .data-table th:first-child,
+  .data-table td:first-child { padding-left: 12px; }
+  .data-table th:last-child,
+  .data-table td:last-child { padding-right: 12px; }
+}
+
+/* === ATM Trackers === */
+.atm-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.atm-card {
+  position: relative;
+  padding: 24px 32px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  border-right: 1px solid var(--border-strong);
+}
+.atm-card:last-child { border-right: 0; }
+.atm-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+}
+.atm-card__ticker {
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--accent);
+}
+@media (max-width: 720px) {
+  .atm-card__ticker { font-size: 16px; }
+}
+.atm-card__updated {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+.atm-card__metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  opacity: 0;
+  /* Lock the row height so the stage box below sits at the same vertical
+     offset whether the card is in its intro placeholder state (empty value
+     spans) or fully loaded with 22px proceeds + BTC numbers. Without this
+     the loading card's metrics row collapses to ~15px while the loaded
+     card's takes ~52px, and the two stage boxes ride at different heights
+     during the fade-in animation. */
+  min-height: 52px;
+  transition: opacity 320ms ease;
+}
+.atm-card__metrics.is-ready { opacity: 1; }
+.atm-metric { display: flex; flex-direction: column; gap: 6px; }
+.atm-metric__label {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #888;
+  text-transform: uppercase;
+}
+.atm-metric__value {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.atm-metric__value--btc { color: var(--accent); }
+.atm-change--up { color: var(--up); }
+.atm-change--down { color: var(--down); }
+.atm-card__stage {
+  position: relative;
+  height: 150px;
+  background: #050505;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.atm-coins {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.atm-coins {
+  transition: opacity 480ms ease;
+}
+.atm-card__stage--faded .atm-coins { opacity: 0; }
+.atm-card__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+  padding: 16px 18px;
+  font-family: var(--mono);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  color: var(--accent);
+  background: #050505;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 480ms ease, visibility 0s linear 480ms;
+  z-index: 3;
+}
+.atm-card__overlay.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 480ms ease, visibility 0s linear 0s;
+}
+.atm-overlay__label {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+.atm-overlay__value {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.atm-card__overlay--threshold {
+  font-size: 22px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.atm-card__overlay--threshold.is-visible {
+  animation: atm-threshold-pulse 3600ms ease-in-out 480ms infinite;
+}
+@keyframes atm-threshold-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.atm-card__intro {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 64px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  text-shadow: 0 0 24px rgba(255, 122, 0, 0.45);
+  animation: atm-intro-pulse 900ms ease-out infinite alternate;
+  transition: opacity 280ms ease;
+  pointer-events: none;
+}
+.atm-card__intro--failed {
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  color: var(--text-faint);
+  text-shadow: none;
+  animation: none;
+}
+.atm-card__intro--closed {
+  flex-direction: column;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--text);
+  text-shadow: none;
+  animation: none;
+}
+.atm-closed__title {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  color: var(--text);
+}
+.atm-closed__sub {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: var(--text-faint);
+}
+.atm-card__intro.is-fading { opacity: 0; }
+@keyframes atm-intro-pulse {
+  from { opacity: 0.7; transform: scale(0.98); }
+  to   { opacity: 1; transform: scale(1.02); }
+}
+
+@media (max-width: 720px) {
+  .atm-grid { grid-template-columns: 1fr; }
+  .atm-card {
+    border-right: 0;
+    border-bottom: 1px solid var(--border-strong);
+    padding: 20px 18px 22px;
+  }
+  .atm-card:last-child { border-bottom: 0; }
+  .atm-card__metrics { gap: 18px; }
+  .atm-metric__value { font-size: 18px; }
+  .atm-card__stage { height: 140px; }
+  .atm-card__intro { font-size: 48px; }
+  .atm-card__overlay { padding: 12px 14px; gap: 8px; }
+  .atm-overlay__label { font-size: 10px; letter-spacing: 0.14em; }
+  .atm-overlay__value { font-size: 18px; }
+  .atm-card__overlay--threshold { font-size: 14px; letter-spacing: 0.16em; }
+}
+
+/* === Cookie consent banner === */
+.consent-banner {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  background: #050505;
+  border-top: 1px solid var(--border-strong);
+  transform: translateY(100%);
+  transition: transform 220ms ease;
+  pointer-events: none;
+}
+.consent-banner.is-visible {
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.consent-banner__inner {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  padding: 14px 34px;
+}
+.consent-banner__text {
+  font-family: var(--mono);
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+}
+.consent-banner__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.consent-btn {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  padding: 8px 18px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: border-color 140ms ease, color 140ms ease;
+}
+.consent-btn:hover {
+  border-color: var(--text);
+  color: var(--text);
+}
+.consent-link-inline {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  text-decoration: none;
+}
+.consent-link-inline:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+@media (max-width: 720px) {
+  .consent-banner__inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 18px;
+  }
+  .consent-banner__text { font-size: 13px; }
+  .consent-banner__actions {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .consent-btn {
+    padding: 10px 18px;
+    font-size: 13px;
+  }
+  .consent-link-inline { font-size: 12px; }
+}
+
+@media (max-width: 720px) {
+  .data-table .rank { font-size: 12px; }
+  .data-table .ticker-cell { font-size: 12px; }
+  .data-table .company-cell { font-size: 13px; }
+  .company-cell__summary { font-size: 11px; }
+  .data-table .country-cell { font-size: 16px; }
+  .data-table .source-cell { font-size: 11px; letter-spacing: 0.05em; }
+  .src-suffix { display: none; }
+  .data-table .date-cell { font-size: 12px; }
+
+  .layout { padding: 14px; gap: 14px; }
+  .story__title { font-size: 17px; }
+  .story__body p { font-size: 13px; line-height: 1.6; }
+  .story { padding: 20px 18px 48px; max-height: 280px; }
+  .stories { gap: 14px; padding: 14px; }
+  .footer {
+    padding: 18px 14px 22px;
+    gap: 12px;
+  }
+  .footer__links {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    gap: 5px 8px;
+  }
+  .footer__legal {
+    font-size: 12px;
+    line-height: 1.7;
+    padding: 0 4px;
+    letter-spacing: 0.14em;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar__nav { gap: 12px; }
+  .topbar__nav a { font-size: 12px; letter-spacing: 0.1em; }
+  .topbar__status { display: none; }
+  .ticker { gap: 7px; padding: 8px 8px; }
+  .quote { gap: 3px; }
+  .quote__value { font-size: 10px; }
+  .quote__delta { font-size: 9px; padding: 1px 3px; }
+  .quote__label { font-size: 9px; }
+  .topbar__status { font-size: 9px; gap: 5px; letter-spacing: 0.1em; }
+  .status-dot { width: 6px; height: 6px; }
+  /* Hide rank column on holdings only — filings DATE must stay visible */
+  #holdingsTable th:nth-child(1),
+  #holdingsTable td:nth-child(1) { display: none; }
+  .stories { grid-template-columns: 1fr; }
+}
+
+/* Language switcher (Swedish/English flag in topbar) */
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 6px;
+  margin: 0 6px;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+  text-decoration: none;
+  flex: 0 0 auto;
+}
+.lang-switch:hover, .lang-switch:focus { opacity: 1; outline: none; }
+.lang-switch__flag {
+  display: block;
+  border: 1px solid #2a2a2a;
+  border-radius: 2px;
+  width: 34px;
+  height: 22px;
+}
+@media (max-width: 720px) {
+  .lang-switch__flag { width: 26px; height: 17px; }
+}
+
+
+
+@media (max-width: 380px) {
+  .topbar__nav { gap: 10px; }
+  .topbar__nav a { font-size: 10px; letter-spacing: 0.06em; }
+}
+
+/* Article body: improve readability on mobile and large screens alike */
+.article-page__body p { line-height: 1.78; }
+@media (max-width: 720px) {
+  .article-page__body p { font-size: 15px; line-height: 1.8; }
+  .article-page__body h2 { font-size: 17px; line-height: 1.3; margin-top: 28px; }
+}
+
+/* Prevent any wide table inside a panel from triggering horizontal page scroll */
+.table-wrap, .panel { max-width: 100%; }
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* Ensure no element bleeds horizontally */
+html, body { overflow-x: hidden; }
+
+/* Touch targets: minimum 36px tappable height on small screens */
+@media (max-width: 720px) {
+  .topbar__nav a, .footer-link, .clickable-row { min-height: 36px; align-items: center; }
+}
+/* === Story card title + Read full article link === */
+.story__title-link {
+  color: inherit;
+  text-decoration: none;
+  transition: color .15s ease;
+}
+.story__title-link:hover { color: var(--accent); }
+.story__readmore {
+  display: inline-block;
+  margin-top: 14px;
+  font-family: var(--mono, monospace);
+  font-size: 12px;
+  letter-spacing: .14em;
+  color: var(--accent);
+  text-decoration: none;
+  text-transform: uppercase;
+}
+.story__readmore:hover { text-decoration: underline; }
+.story:not(.is-expanded) .story__readmore { display: none; }
+/* === STORY CARD as anchor wrapper (2026-06-12) === */
+.story-card {
+  display: block;
+  background: #0c0c0c;
+  border: 1px solid var(--border-strong);
+  padding: 24px 28px 22px;
+  text-decoration: none;
+  color: inherit;
+  transition: background-color .15s ease, border-color .15s ease;
+}
+.story-card:hover {
+  background: #111;
+  border-color: #2a2a2a;
+}
+.story-card .story__kicker {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: var(--accent);
+  font-weight: 600;
+  display: block;
+  margin-bottom: 10px;
+}
+.story-card .story__title {
+  margin: 0 0 14px;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+.story-card:hover .story__title { color: var(--accent); }
+.story-card .story__preview {
+  color: #c8c8c8;
+  font-size: 14px;
+  line-height: 1.65;
+}
+.story-card .story__preview p { margin: 0 0 8px; }
+.story-card .story__preview p:last-child { margin-bottom: 0; }
+.story-card .story__readmore {
+  display: inline-block;
+  margin-top: 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .16em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+@media (max-width:720px) {
+  .story-card { padding: 18px 18px 16px; }
+  .story-card .story__title { font-size: 17px; line-height: 1.3; }
+  .story-card .story__preview { font-size: 13px; line-height: 1.6; }
+}
+
+/* === MOBILE TOPBAR DEFINITIVE FIX (v2) ===
+   Three-column grid: brand | nav | lang flag. Same row at every viewport;
+   nav scrolls horizontally if it would overflow. The flag is its own grid
+   column so it always sits top-right at the same height as the brand.
+*/
+.topbar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+}
+.topbar__lang {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.topbar__nav {
+  justify-self: stretch;
+  display: flex;
+  justify-content: center;
+  flex-wrap: nowrap;
+}
+@media (max-width: 720px) {
+  .topbar {
+    grid-template-columns: auto 1fr auto;
+    gap: 8px 10px;
+    padding: 8px 12px;
+  }
+  .topbar__brand { grid-column: 1; }
+  .topbar__lang { grid-column: 3; }
+  .topbar__nav {
+    grid-column: 2;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 14px;
+    padding: 4px 8px;
+    min-width: 0;
+  }
+  .topbar__nav::-webkit-scrollbar { display: none; }
+  .topbar__nav > a {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: 4px 0;
+  }
+}
+@media (max-width: 420px) {
+  .topbar { padding: 8px 10px; gap: 6px 8px; }
+  .topbar__nav { gap: 12px; }
+  .topbar__nav > a { font-size: 11px; letter-spacing: 0.06em; }
+}
+/* === PANEL HEADING ALWAYS ONE LINE ON MOBILE === */
+.panel__head {
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 12px;
+}
+.panel__title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.panel__aside, .panel__meta, .heatmap-meta, .pref-shares__updated {
+  flex-shrink: 0;
+}
+@media (max-width: 720px) {
+  .panel__head { padding-left: 14px; padding-right: 14px; gap: 10px; }
+  .panel__title { font-size: 12px; letter-spacing: 0.08em; }
+  .panel__title::before { width: 2px; margin-right: 7px; }
+  .panel__aside, .panel__meta, .heatmap-meta, .pref-shares__updated { font-size: 10px; }
+}
+@media (max-width: 380px) {
+  .panel__title { font-size: 11px; letter-spacing: 0.06em; }
+}
+
+/* page-intro h2 (formerly h1) — keeps the prominent landing-page summary
+   without duplicating the panel h1 used as canonical heading */
+.page-intro__title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 14px;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+@media (max-width: 640px) {
+  .page-intro__title { font-size: 22px; margin-bottom: 10px; }
+}
+/* SEO blurb sitting INSIDE the panel, directly under the canonical h1
+   panel__title. Replaces the old page-intro section that lived above the
+   panel and caused duplicate-h1 problems. */
+.panel__intro {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  color: #cccccc;
+  font-size: 15px;
+  line-height: 1.75;
+}
+.panel__intro p { margin: 0 0 10px; }
+.panel__intro p:last-child { margin-bottom: 0; }
+@media (max-width: 720px) {
+  .panel__intro { padding: 14px 16px; font-size: 14px; line-height: 1.7; }
+}
+/* Mobile header (2026-06-13): shrink HODLINGBTC logo, vertically align brand + nav + flag */
+@media (max-width: 720px) {
+  .topbar { align-items: center; }
+  .topbar__brand { align-self: center; }
+  .topbar__brand .brand-link {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+  }
+  .topbar__brand .brand__name { font-size: 13px; letter-spacing: 0.08em; }
+  .topbar__brand .brand__mark { font-size: 13px; letter-spacing: 0.08em; }
+  .topbar__nav { align-self: center; display: flex; align-items: center; }
+  .topbar__nav > a { line-height: 1; display: inline-flex; align-items: center; }
+  .topbar__lang { align-self: center; display: flex; align-items: center; }
+  .topbar__lang .lang-switch { display: inline-flex; align-items: center; }
+}
+@media (max-width: 420px) {
+  .topbar__brand .brand__name { font-size: 11px; letter-spacing: 0.06em; }
+  .topbar__brand .brand__mark { font-size: 11px; letter-spacing: 0.06em; }
+}
+
+/* === Block explorer cards (/explorer/ + homepage panel) ===
+ * Card layout reuses the panel design system. Hero cards span equally; the
+ * secondary grid is a CSS grid with auto-fit minmax so cards reflow on
+ * narrower viewports without media queries. */
+.explorer-meta { font-size: 11px; color: #b4b4b4; letter-spacing: 0.06em; text-transform: uppercase; }
+.explorer-hero {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  padding: 18px 20px 4px;
+}
+.explorer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+  padding: 14px 20px 22px;
+}
+.explorer-card {
+  background: #0a0a0a;
+  border: 1px solid var(--border-strong, #1f1f1f);
+  border-radius: 6px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.explorer-card--hero {
+  background: #0a0a0a;
+  border-color: #2a2a2a;
+  padding: 18px 20px 16px;
+}
+.explorer-card--wide { grid-column: 1 / -1; }
+.explorer-card__label {
+  font-family: var(--mono, ui-monospace, "Cascadia Mono", monospace);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: #b4b4b4;
+  text-transform: uppercase;
+}
+.explorer-card__value {
+  font-family: var(--mono, ui-monospace, "Cascadia Mono", monospace);
+  font-size: 30px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.explorer-card--hero .explorer-card__value { color: var(--accent, #ff7a00); }
+.explorer-card__sub {
+  font-family: var(--mono, ui-monospace, "Cascadia Mono", monospace);
+  font-size: 11px;
+  color: #888;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.explorer-card__title {
+  font-family: var(--mono, ui-monospace, "Cascadia Mono", monospace);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--accent, #ff7a00);
+  margin: 0 0 12px;
+  text-transform: uppercase;
+}
+@media (max-width: 720px) {
+  .explorer-card__title { font-size: 15px; letter-spacing: 0.1em; }
+}
+
+/* Homepage-only: hide the "X% coupon · $Y face" line on preferred-shares
+ * cards. Scoped via section#preferred so the standalone /preferred/ page
+ * (which has no id="preferred" wrapper) keeps the line as before. */
+section#preferred .pref-card__rate { display: none; }
+
+/* Apply the inline-unit hero layout from the homepage explorer panel to the
+ * dedicated /explorer/ + /sv/explorer/ pages so the halving and fee cards
+ * read "96,471 blocks · 670 days" and "4 sat/vB" instead of stacked subs. */
+.explorer-card--hero .explorer-card__row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+.explorer-card--hero .explorer-card__unit {
+  font-family: var(--mono, ui-monospace, "Cascadia Mono", monospace);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: #888;
+  text-transform: lowercase;
+  font-weight: 500;
+}
+.explorer-card--hero .explorer-card__sep {
+  color: #444;
+  font-size: 16px;
+  font-family: var(--mono, ui-monospace, "Cascadia Mono", monospace);
+  padding: 0 2px;
+}
+
+/* Story-card readmore alignment: push "Read full article" to the same vertical
+ * position on every card regardless of preview length. The card is already
+ * display:flex column; making the preview block grow with flex:1 pins the
+ * readmore link to the bottom. */
+.story-card { display: flex; flex-direction: column; }
+.story-card .story__preview { flex: 1 1 auto; }
+.story-card .story__readmore { margin-top: auto; }
+.explorer-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--mono, ui-monospace, "Cascadia Mono", monospace);
+  font-size: 13px;
+  color: #d6d6d6;
+}
+.explorer-table td, .explorer-table th { padding: 6px 0; border-bottom: 1px solid #1a1a1a; text-align: left; }
+.explorer-table th { color: #b4b4b4; font-weight: 600; letter-spacing: 0.04em; font-size: 11px; text-transform: uppercase; }
+.explorer-table .num { text-align: right; font-variant-numeric: tabular-nums; color: #fff; padding-right: 8px; }
+.explorer-table tr:last-child td { border-bottom: none; }
+.explorer-faq {
+  padding: 14px 20px 22px;
+  color: #cccccc;
+  font-size: 15px;
+  line-height: 1.7;
+}
+.explorer-faq h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--accent, #ff7a00);
+  margin: 18px 0 6px;
+  letter-spacing: -0.005em;
+}
+.explorer-faq h3:first-child { margin-top: 0; }
+.explorer-faq p { margin: 0 0 6px; }
+@media (max-width: 720px) {
+  .explorer-hero, .explorer-grid { padding-left: 14px; padding-right: 14px; }
+  .explorer-card__value { font-size: 24px; }
+  .explorer-faq { padding: 14px 16px 18px; font-size: 14px; line-height: 1.65; }
+  .explorer-faq h3 { font-size: 15px; }
+}
+
+/* Homepage block-explorer panel - compact 3-card hero only. */
+.explorer-home-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  padding: 14px 20px 18px;
+}
+.explorer-home-card {
+  background: #0a0a0a;
+  border: 1px solid #1f1f1f;
+  border-radius: 6px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.explorer-home-card__label {
+  font-family: var(--mono, ui-monospace, "Cascadia Mono", monospace);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  color: #b4b4b4;
+  text-transform: uppercase;
+}
+.explorer-home-card__value {
+  font-family: var(--mono, ui-monospace, "Cascadia Mono", monospace);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--accent, #ff7a00);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.explorer-home-card__row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+}
+.explorer-home-card__unit {
+  font-family: var(--mono, ui-monospace, "Cascadia Mono", monospace);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: #888;
+  text-transform: lowercase;
+  font-weight: 500;
+}
+.explorer-home-card__sep {
+  color: #444;
+  font-size: 14px;
+  font-family: var(--mono, ui-monospace, "Cascadia Mono", monospace);
+  padding: 0 2px;
+}
+.explorer-home-card__sub {
+  font-family: var(--mono, ui-monospace, "Cascadia Mono", monospace);
+  font-size: 10px;
+  color: #888;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+@media (max-width: 720px) {
+  .explorer-home-grid { padding: 12px 14px 16px; }
+  .explorer-home-card__value { font-size: 18px; }
+}
+
+/* Panel intro centered variant - shared layout for the dictionary +
+   explorer homepage cards so the "Open dictionary →" and "Open full
+   explorer →" links sit in the same place under the blurb. */
+.panel__intro--centered { text-align: center; padding: 18px 24px 20px; }
+.panel__intro--centered .panel__intro-text { margin: 0 0 14px; }
+.panel__intro--centered .panel__intro-link {
+  display: inline-block;
+  font-family: var(--mono, ui-monospace, "Cascadia Mono", monospace);
+  font-size: 14px;
+  letter-spacing: 0.16em;
+  color: var(--accent, #ff7a00);
+  text-decoration: none;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.panel__intro--centered .panel__intro-link:hover { text-decoration: underline; }
+@media (max-width: 720px) {
+  .panel__intro--centered { padding: 14px 16px 16px; }
+  .panel__intro--centered .panel__intro-link { font-size: 13px; letter-spacing: 0.14em; }
+}
+
+/* Inline dictionary term links - orange, clickable, no underline by default. */
+.dict-term-link {
+  color: var(--accent, #ff7a00);
+  text-decoration: none;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.dict-term-link:hover { text-decoration: underline; }
+
+/* Story-card readmore + kicker font bump (2026-06-13). Keeps the same
+   mono family but lifts the visual weight of the only two labels users
+   see on every card. */
+.story-card .story__kicker { font-size: 13px; letter-spacing: 0.2em; }
+.story-card .story__readmore {
+  font-size: 14px;
+  letter-spacing: 0.16em;
+  font-weight: 700;
+}
+@media (max-width: 720px) {
+  .story-card .story__kicker { font-size: 12px; }
+  .story-card .story__readmore { font-size: 13px; }
+}
+
+/* Footer wrap separator - on narrow viewports break the line BEFORE the
+   data-source labels so the orange interactive links (PRIVACY, CONTACT,
+   COOKIES) sit on row 1 and DATA · COINBASE · SEC EDGAR fall to row 2. */
+@media (max-width: 540px) {
+  .footer__sep--wrap { flex-basis: 100%; width: 100%; height: 0; opacity: 0; padding: 0; margin: 4px 0 0; }
+}
+
+/* /sv/explorer/ - bump body content ~25% larger but keep titles unchanged.
+   Scoped via the html lang attribute + the explorer section id so it
+   never leaks into other Swedish pages. */
+html[lang="sv"] section#explorer .explorer-card__value { font-size: 38px; }
+html[lang="sv"] section#explorer .explorer-card__label { font-size: 14px; letter-spacing: 0.1em; }
+html[lang="sv"] section#explorer .explorer-card--hero .explorer-card__unit { font-size: 16px; }
+html[lang="sv"] section#explorer .explorer-card--hero .explorer-card__sep { font-size: 20px; }
+html[lang="sv"] section#explorer .explorer-table { font-size: 16px; }
+html[lang="sv"] section#explorer .explorer-table th { font-size: 13px; }
+html[lang="sv"] section#explorer .explorer-table td,
+html[lang="sv"] section#explorer .explorer-table th { padding: 8px 0; }
+html[lang="sv"] section#explorer .panel__intro { font-size: 18px; line-height: 1.75; }
+html[lang="sv"] section#explorer .explorer-faq { font-size: 18px; line-height: 1.7; }
+html[lang="sv"] section#explorer .explorer-meta { font-size: 13px; }
+@media (max-width: 720px) {
+  html[lang="sv"] section#explorer .explorer-card__value { font-size: 30px; }
+  html[lang="sv"] section#explorer .explorer-table { font-size: 15px; }
+  html[lang="sv"] section#explorer .panel__intro { font-size: 16px; }
+  html[lang="sv"] section#explorer .explorer-faq { font-size: 16px; }
+}
+
+/* /sv/explorer/ - right-align number values across all tables so the
+   numbers line up in the same vertical column regardless of label width.
+   First column absorbs slack; .num and unit columns stay tight. */
+html[lang="sv"] section#explorer .explorer-table td:first-child { width: 100%; }
+html[lang="sv"] section#explorer .explorer-table .num { white-space: nowrap; padding-left: 16px; }
+html[lang="sv"] section#explorer .explorer-table td:nth-child(3) { white-space: nowrap; padding-left: 8px; text-align: left; }
+/* Recent blocks + Mining pools (5-col / 3-col data tables) keep their own balance. */
+html[lang="sv"] section#explorer .explorer-table.data-table td:first-child { width: auto; }
+
+/* Homepage twin-panel layout - dictionary + explorer panels sit side by side
+   on desktop and stack on mobile. Reduces vertical scroll, balances the two
+   reference shortcuts at equal visual weight. */
+.home-twin-panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  /* No bottom margin. <main> is a flex column with gap:36px, so a margin here
+     stacked on top of it and left a 60px hole after every paired row while the
+     rest of the page sat at 36. */
+  margin: 0;
+}
+.home-twin-panels__item { margin: 0; display: flex; flex-direction: column; }
+.home-twin-panels__item .explorer-home-grid { flex: 1 1 auto; }
+@media (max-width: 720px) {
+  .home-twin-panels { grid-template-columns: 1fr; gap: 12px; }
+}
+
+/* Link-only intro variant - no body text, just the orange shortcut link
+   centered. Sits flush at the bottom of the panel with a top divider so
+   it reads as a footer-link section, not an opener. */
+.panel__intro--link-only {
+  padding: 16px 24px 18px;
+  border-bottom: none;
+}
+.home-twin-panels__item .panel__intro--link-only {
+  margin-top: auto;
+  border-top: 1px solid var(--border, #1f1f1f);
+}
+@media (max-width: 720px) {
+  .panel__intro--link-only { padding: 14px 16px 16px; }
+}
+
+/* Site-wide hide of "Updated …" timestamp displays across all panels and
+   cards per editorial direction (2026-06-14). The cron-rendered stamps
+   reflect when the last data refresh happened, not when the user is
+   viewing the data, and add visual noise on every dashboard surface.
+   The class list below covers every existing stamp element so a single
+   rule retires every variant; new "updated" markers should reuse one of
+   these classes or add to this rule. */
+.heatmap-meta,
+.pref-shares__updated,
+.atm-card__updated,
+.explorer-meta,
+[data-role="updated"],
+[data-role="last-updated"] { display: none !important; }
+
+/* Homepage FILINGS table only - hide the SOURCE column on mobile so the
+   COMPANY column can claim the freed width for longer filing-type text
+   without wrapping. Also hide the company NAME on mobile because the
+   ticker column to the left already identifies the issuer; the COMPANY
+   column then carries only the filing-type summary (e.g. "FORM 8-K",
+   "SCHEDULE 13D/A") which is the part the user actually needs on a
+   narrow viewport. /filings/ standalone page keeps both visible. */
+@media (max-width: 720px) {
+  .data-table--filings-home thead th:nth-child(4),
+  .data-table--filings-home .source-cell { display: none; }
+  .data-table--filings-home .company-cell__name { display: none; }
+}
+
+/* Homepage twin panels - center the BITCOIN TREASURY DICTIONARY and
+   BITCOIN BLOCK EXPLORER titles so they sit above the centered footer
+   link in a single vertical axis. */
+.home-twin-panels__item .panel__head { justify-content: center; text-align: center; }
+.home-twin-panels__item .panel__head .panel__title { text-align: center; }
+
+/* /sv/explorer/ hero card override - bring the value + label + unit text
+   down to the same size as the table body below so the hero row reads as
+   a continuation of the data rather than an oversized summary. */
+html[lang="sv"] section#explorer .explorer-card--hero { padding: 14px 16px 16px; }
+html[lang="sv"] section#explorer .explorer-card--hero .explorer-card__label { font-size: 13px; letter-spacing: 0.08em; }
+html[lang="sv"] section#explorer .explorer-card--hero .explorer-card__value { font-size: 16px; line-height: 1.4; }
+html[lang="sv"] section#explorer .explorer-card--hero .explorer-card__unit { font-size: 16px; line-height: 1.4; letter-spacing: 0.04em; }
+html[lang="sv"] section#explorer .explorer-card--hero .explorer-card__sep { font-size: 16px; line-height: 1.4; }
+html[lang="sv"] section#explorer .explorer-card--hero .explorer-card__row { gap: 4px 8px; }
+
+/* Homepage FILINGS table only - put company name and filing-type summary
+   on a SINGLE line so each row matches the row height of the holdings
+   table.
+   The company name is the one thing every row must show, so it is the item
+   that never gives way; the summary absorbs whatever width is left. The
+   renderer's 25-char cap bounds the summary by COUNT, which is not the same
+   as by width: 25 full-width Japanese characters are about twice the run of
+   25 Latin ones. When the summary was the rigid item, those TDnet headlines
+   took the whole cell and squeezed the name to zero -- present in the markup,
+   invisible on screen. */
+.data-table--filings-home .company-cell {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.data-table--filings-home .company-cell__name {
+  flex: 0 0 auto;
+}
+.data-table--filings-home .company-cell__summary {
+  flex: 0 1 auto;
+  /* A flex item will not shrink below its content without this. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 0;
+  color: var(--text-dim);
+}
+@media (max-width: 720px) {
+  .data-table--filings-home .company-cell { gap: 8px; }
+}
+#mcapNavTable tbody tr[data-rank-hidden]{display:none}
+
+/* Two-span title: short variant hidden by default (desktop shows the full
+   "MARKET CAP VS BITCOIN NAV"); mobile rule below flips visibility. */
+.mcap-nav-title-short { display: none; }
+
+/* RATIO column header on the mcap-nav tables is a sort toggle. Orange color
+   + cursor signals interactivity; arrow span flips ▾/▴ in JS. Specificity
+   must beat `.data-table th { color: ... }` so we qualify the selector with
+   `.data-table th` instead of relying on `.mcap-nav-sort` alone. */
+.data-table th.mcap-nav-sort,
+.data-table th.mcap-nav-sort:visited {
+  color: var(--accent);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.data-table th.mcap-nav-sort:hover { filter: brightness(1.2); }
+.mcap-nav-sort__arrow { display: inline-block; font-size: 0.9em; margin-left: 2px; }
+
+/* Pull rank/ticker/company left on all viewports for the mcap-nav tables. */
+#mcapNavTable th:first-child,
+#mcapNavTable td:first-child,
+#mcapNavFullTable th:first-child,
+#mcapNavFullTable td:first-child,
+#mcapNavPeerTable th:first-child,
+#mcapNavPeerTable td:first-child { padding-left: 10px; padding-right: 6px; }
+#mcapNavTable th:nth-child(2),
+#mcapNavTable td:nth-child(2),
+#mcapNavFullTable th:nth-child(2),
+#mcapNavFullTable td:nth-child(2),
+#mcapNavPeerTable th:nth-child(2),
+#mcapNavPeerTable td:nth-child(2) { padding-left: 6px; }
+
+@media (max-width: 720px) {
+  /* Hide HQ column entirely on mobile (declutter). Covers homepage panel
+     (#mcapNavTable), standalone /market-cap-vs-bitcoin-nav/ table
+     (#mcapNavFullTable), and per-company SEO landing page peer-comparison
+     table (#mcapNavPeerTable) - all three share the same 5-column layout. */
+  #mcapNavTable thead th:nth-child(4),
+  #mcapNavTable tbody td.country-cell,
+  #mcapNavFullTable thead th:nth-child(4),
+  #mcapNavFullTable tbody td.country-cell,
+  #mcapNavPeerTable thead th:nth-child(4),
+  #mcapNavPeerTable tbody td.country-cell { display: none; }
+
+  /* Homepage-only: swap to the short title so it fits at the default panel
+     title size (no font-size override needed). The standalone page keeps the
+     full "MARKET CAP VS BITCOIN NAV" because its <h1> has no pager next to it. */
+  #mcap-nav .mcap-nav-title-long  { display: none; }
+  #mcap-nav .mcap-nav-title-short { display: inline; }
+
+  /* Real fix for "ticker still too far right": explicit column widths.
+     With table-layout: fixed on mobile, columns without width share equally,
+     which leaves the rank column ~25% of the viewport. Pinning rank + ratio
+     to small fixed widths lets ticker + company expand into the space and
+     pulls everything flush-left. */
+  #mcapNavTable th:first-child,
+  #mcapNavTable td:first-child,
+  #mcapNavFullTable th:first-child,
+  #mcapNavFullTable td:first-child,
+  #mcapNavPeerTable th:first-child,
+  #mcapNavPeerTable td:first-child {
+    width: 28px; padding-left: 4px; padding-right: 2px;
+  }
+  #mcapNavTable th:nth-child(2),
+  #mcapNavTable td:nth-child(2),
+  #mcapNavFullTable th:nth-child(2),
+  #mcapNavFullTable td:nth-child(2),
+  #mcapNavPeerTable th:nth-child(2),
+  #mcapNavPeerTable td:nth-child(2) {
+    width: 62px; padding-left: 2px; padding-right: 4px;
+  }
+  #mcapNavTable th:last-child,
+  #mcapNavTable td:last-child,
+  #mcapNavFullTable th:last-child,
+  #mcapNavFullTable td:last-child,
+  #mcapNavPeerTable th:last-child,
+  #mcapNavPeerTable td:last-child {
+    width: 64px; padding-right: 8px;
+  }
+}
+
+/* ==========================================================================
+   Homepage desktop density pass
+   --------------------------------------------------------------------------
+   Everything below is gated to desktop. The phone layout is already a single
+   column with no room to give back, so pairing panels or shrinking type there
+   would only make it worse. 721px is the site's existing breakpoint: it is
+   where .home-twin-panels already collapses to one column, so these rules turn
+   off at exactly the point the grid does.
+   ========================================================================== */
+@media (min-width: 721px) {
+  /* Holdings + mcap-nav, and filings + insiders, run as pairs. Both panels in
+     each pair were tall columns of short rows with a wide empty gutter, so the
+     page scrolled for space it was not using.
+
+     minmax(0, 1fr), not 1fr. A bare 1fr is minmax(auto, 1fr), so a wide cell
+     sets the column's floor and the track refuses to shrink: the filings table
+     carries untranslated Japanese headlines, which blew its column past half
+     and pushed the insider panel off the right edge. */
+  .home-twin-panels--data {
+    /* stretch, not start: the two panels in a pair are read as one unit, so a
+       short one squatting beside a tall one looks like a mistake. */
+    align-items: stretch;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .home-twin-panels--data .home-twin-panels__item { height: 100%; }
+  /* With the track now allowed to shrink, the table decides how to cope. */
+  .home-twin-panels--data .table-wrap { overflow-x: auto; }
+
+  /* The twin-panel grid was built for the dictionary/explorer cards, which are a
+     heading and nothing else and look right centred. These panels carry tables,
+     and a centred heading over a left-aligned table reads as a misalignment, so
+     the pairs opt back out. */
+  .home-twin-panels--data .panel__head {
+    justify-content: space-between;
+    text-align: left;
+  }
+  .home-twin-panels--data .panel__head .panel__title { text-align: left; }
+  /* The pager, not the heading, gives way when the pair is narrow. Without this
+     the title is the flex item that shrinks and it ends in an ellipsis. */
+  .home-twin-panels--data .panel__title { flex: 0 0 auto; text-overflow: clip; overflow: visible; }
+  .home-twin-panels--data .panel__head .pager,
+  .home-twin-panels--data .panel__head .chart-filters { flex: 0 1 auto; min-width: 0; }
+
+  /* Filings headlines run long -- some are untranslated Japanese sentences. Cap
+     the cell rather than setting the column width for the whole panel.
+     Width only: the cell is a flex row (.data-table--filings-home), so an
+     ellipsis declared here would have no text to act on and would only mask
+     which of the two spans is supposed to give way. That belongs on the
+     summary itself. */
+  .home-twin-panels--data #filings .table-wrap td.company-cell {
+    max-width: 268px;
+  }
+
+  /* "SEC EDGAR" spelled out cost 238px of a 650px panel -- more than the date and
+     ticker together -- and pushed the table to 779px, which is the sideways drag.
+     The suffix goes, exactly as the narrow-viewport rules already drop it: the
+     source is still named, and no row is worth scrolling for. */
+  .home-twin-panels--data #filings .src-suffix { display: none; }
+
+  /* Half-width panels need room, but it comes out of the padding, not the type.
+     A blanket font-size here was the wrong tool: every cell that matters --
+     ticker, company, country -- carries its own explicit size and ignored it,
+     so the only thing it actually shrank was <td class="num">. That left BTC and
+     RATIO, the numbers these two tables exist to show, as the smallest text on
+     their own row at 12px next to a 17px company name. They inherit the
+     table's 17px again, exactly as they do on the standalone pages.
+
+     28px of side padding on five columns is 280px of the 650 available. Halved,
+     it buys back more width than shrinking the text ever did.
+
+     The cell-full/cell-short swap belongs to the responsive rules and is left
+     alone: forcing the short variants here blanked the date and insider columns
+     outright. */
+  .home-twin-panels--data .table-wrap td,
+  .home-twin-panels--data .table-wrap th { padding: 7px 14px; }
+
+  /* Fill the card to the bottom, both of them. The two paired panels are locked
+     to the same height, but the shorter table (FILINGS, with no badge to pad its
+     rows) ended ~25px above the panel edge while INSIDER reached the bottom, so
+     the pair looked lopsided. Stretch the table to the panel height and let the
+     rows share the slack: each table then reaches its own bottom edge regardless
+     of row content. The panel becomes a flex column so the table-wrap can grow. */
+  .home-twin-panels--data .panel { display: flex; flex-direction: column; }
+  .home-twin-panels--data .panel .table-wrap { flex: 1 1 auto; }
+  .home-twin-panels--data .panel .table-wrap > table { height: 100%; }
+
+  /* SHARES and VALUE do not fit. Half-width, the insider table measured 840px
+     of columns inside a 652px panel, so both ran past the panel edge and SHARES
+     was clipped mid-word -- the stray "S" on the header rule. Dropping the two
+     money columns is what /insiders/ already does when space is short, and it
+     leaves the four columns that pair 1:1 with FILINGS beside it. The full
+     numbers stay one click away on /insiders/. */
+  .home-twin-panels--data #homeInsiderTable .home-ins-c-shares,
+  .home-twin-panels--data #homeInsiderTable .home-ins-c-value { display: none; }
+
+  /* With those gone the remaining columns line up with FILINGS, so they take
+     its type scale too -- date, ticker, subject, tag. Left to inherit, every
+     insider cell sat at the table's 12px while FILINGS sized its cells
+     individually, and the two panels read as different typefaces side by side. */
+  .home-twin-panels--data #homeInsiderTable .home-ins-c-date { font-size: 14px; }
+  .home-twin-panels--data #homeInsiderTable .home-ins-c-ticker { font-size: 16px; }
+  .home-twin-panels--data #homeInsiderTable .home-ins-c-insider { font-size: 17px; }
+  /* 13px, the same as FILINGS' SOURCE cell it sits opposite. */
+  .home-twin-panels--data #homeInsiderTable .home-ins-code { font-size: 13px; }
+
+  /* At 17px the longest insider names wanted a 243px column, which pushed the
+     table to 702px inside a 650px wrap and clipped the TRANSACTION tag off the
+     right edge -- the same failure the money columns had, one column over. The
+     name is the only cell here that can give way without losing information the
+     row is about: the date, the ticker and what was done are all fixed-width
+     facts. Capped, the table measures inside the panel. */
+  .home-twin-panels--data #homeInsiderTable .home-ins-c-insider {
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ATM cards: the ticker sits beside its numbers instead of on a row of its
+     own above them. Grid areas rather than a new wrapper, so the markup the
+     coin animation reads by data-role is untouched. */
+  .atm-card {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "head metrics"
+      "stage stage";
+    column-gap: 28px;
+    row-gap: 14px;
+    padding: 18px 24px 20px;
+  }
+  .atm-card__head { grid-area: head; align-self: center; flex-direction: column; align-items: flex-start; gap: 2px; }
+  .atm-card__metrics {
+    grid-area: metrics;
+    /* The 52px floor existed to stop the stage box jumping while the card
+       loaded. Side by side the ticker already holds the row open, so the floor
+       only adds dead height now. */
+    min-height: 0;
+  }
+  .atm-card__stage { grid-area: stage; height: 110px; }
+
+  /* The history chart was 460px of mostly flat line. */
+  .chart-wrap { height: 345px; }
+
+  /* Amplification: the heading shares the row with its three tickers instead of
+     sitting above a divider with nothing beside it. */
+  #amplification-home {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+  }
+  #amplification-home .panel__head {
+    border-bottom: 0;
+    flex: 0 0 auto;
+    padding-right: 0;
+  }
+  #amplification-home .amp-home-row {
+    flex: 1 1 auto;
+    padding: 10px 32px 10px 0;
+  }
+
+  /* Battlefront and the conviction index share a row, 60/40. The battlefront
+     card is an image and wants the space; the conviction index is one number. */
+  .home-pair-play {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    gap: 16px;
+    align-items: stretch;
+  }
+  .home-pair-play > .panel { height: 100%; }
+  /* The card is already capped at half width inside a full-width panel; in the
+     60% column it should fill what it is given. */
+  .home-pair-play .battlefront-home__card { max-width: 100%; }
+
+  /* The card stacks its heading, score and blurb on its own now, so the only
+     thing left to say here is that the panel is a column: the score block then
+     takes whatever height the heading leaves and centres the number in it. */
+  .home-pair-play #conviction-home {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+/* The selected range's move, sitting with the range buttons. Colour matches the
+   line, so the number and the chart agree at a glance. */
+.chart-filters__change {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+  align-self: center;
+}
+.chart-filters__change.is-up { color: var(--up); }
+.chart-filters__change.is-down { color: var(--down); }

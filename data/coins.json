@@ -1,0 +1,12 @@
+[
+  { "symbol": "DOGE",   "name": "Dogecoin",   "slug": "doge",   "coingeckoId": "dogecoin",    "chain": "Dogecoin" },
+  { "symbol": "SHIB",   "name": "Shiba Inu",  "slug": "shib",   "coingeckoId": "shiba-inu",   "chain": "Ethereum" },
+  { "symbol": "PEPE",   "name": "Pepe",       "slug": "pepe",   "coingeckoId": "pepe",        "chain": "Ethereum" },
+  { "symbol": "WIF",    "name": "dogwifhat",  "slug": "wif",    "coingeckoId": "dogwifcoin",  "chain": "Solana" },
+  { "symbol": "BONK",   "name": "Bonk",       "slug": "bonk",   "coingeckoId": "bonk",        "chain": "Solana" },
+  { "symbol": "FLOKI",  "name": "Floki",      "slug": "floki",  "coingeckoId": "floki",       "chain": "Ethereum" },
+  { "symbol": "BRETT",  "name": "Brett",      "slug": "brett",  "coingeckoId": "based-brett", "chain": "Base" },
+  { "symbol": "POPCAT", "name": "Popcat",     "slug": "popcat", "coingeckoId": "popcat",      "chain": "Solana" },
+  { "symbol": "MOG",    "name": "Mog Coin",   "slug": "mog",    "coingeckoId": "mog-coin",    "chain": "Ethereum" },
+  { "symbol": "TURBO",  "name": "Turbo",      "slug": "turbo",  "coingeckoId": "turbo",       "chain": "Ethereum" }
+]

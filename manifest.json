@@ -1,0 +1,21 @@
+{
+  "name": "ShitcoinsOnly",
+  "short_name": "ShitcoinsOnly",
+  "description": "Live tracker for shitcoins and memecoins - price, market cap, volume, and liquidity.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/assets/favicon-16x16.png?v=2", "sizes": "16x16", "type": "image/png" },
+    { "src": "/assets/favicon-32x32.png?v=2", "sizes": "32x32", "type": "image/png" },
+    { "src": "/assets/favicon-96x96.png?v=2", "sizes": "96x96", "type": "image/png" },
+    { "src": "/assets/favicon-192x192.png?v=2", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/favicon-512x512.png?v=2", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/assets/apple-touch-icon.png?v=2", "sizes": "180x180", "type": "image/png" }
+  ],
+  "categories": ["finance", "news"],
+  "lang": "en"
+}

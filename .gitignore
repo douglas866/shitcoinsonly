@@ -1,0 +1,10 @@
+.claude/
+node_modules/
+.DS_Store
+Thumbs.db
+*.log
+_pushtogithub.ps1
+tools/.portable-git/
+.local/
+
+_research_tmp/
