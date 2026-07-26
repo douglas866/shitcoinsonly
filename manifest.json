@@ -1,7 +1,7 @@
 {
   "name": "ShitcoinsOnly",
   "short_name": "ShitcoinsOnly",
-  "description": "Live tracker for shitcoins and memecoins - price, market cap, volume, and liquidity.",
+  "description": "Live tracker for the top 100 shitcoins and memecoins - price, market cap, 24h change and volume.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

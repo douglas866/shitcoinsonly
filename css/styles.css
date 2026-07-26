@@ -2337,7 +2337,7 @@ html, body { overflow-x: hidden; }
 @media (max-width: 720px) {
   .panel__intro { padding: 14px 16px; font-size: 14px; line-height: 1.7; }
 }
-/* Mobile header (2026-06-13): shrink HODLINGBTC logo, vertically align brand + nav + flag */
+/* Mobile header (2026-06-13): shrink SHITCOINSONLY logo, vertically align brand + nav + flag */
 @media (max-width: 720px) {
   .topbar { align-items: center; }
   .topbar__brand { align-self: center; }

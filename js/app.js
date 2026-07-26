@@ -40,6 +40,22 @@ function esc(s) {
   );
 }
 
+// Symbol -> per-coin-page slug (only coins listed on >=2 major exchanges have a
+// page; the rest render as plain text). Loaded from /data/coins-pages.json.
+let pageMap = {};
+function coinHref(symbol) {
+  const s = pageMap[symbol];
+  return s ? `/coin/${s}/` : null;
+}
+function tickerCellHtml(c) {
+  const h = coinHref(c.symbol), t = esc(c.symbol);
+  return h ? `<a class="ticker-link" href="${h}">${t}</a>` : `<span class="ticker-link">${t}</span>`;
+}
+function nameCellHtml(c) {
+  const h = coinHref(c.symbol), t = esc(c.name);
+  return h ? `<a class="company-link" href="${h}">${t}</a>` : `<span class="company-link">${t}</span>`;
+}
+
 function pctCell(change, extraClass) {
   const cls = change == null || isNaN(change) ? "" : change >= 0 ? "up" : "down";
   const txt = change == null || isNaN(change) ? "—" : fmtPctNum(change);
@@ -86,6 +102,7 @@ async function loadMarket() {
     const seen = new Set();
     marketCache = raw
       .map((m) => ({
+        id: m.id,
         symbol: (m.symbol || "").toUpperCase(),
         name: m.name || "",
         price: m.current_price,
@@ -131,7 +148,7 @@ function markLiveUpdate() {
   el.textContent = `${lk.year}-${lk.month}-${lk.day} ${lk.hour}:${lk.minute} ET`;
 }
 
-// === Pagination (mirrors hodlingbtc's holdings pager exactly) ===
+// === Pagination (mirrors the reference tracker's holdings pager exactly) ===
 function paginate(total, page) {
   const cap = Math.min(total, MAX_PAGES * PAGE_SIZE);
   const maxPage = Math.max(0, Math.ceil(cap / PAGE_SIZE) - 1);
@@ -174,8 +191,8 @@ function renderMarket() {
       return `
         <tr data-rank="${rank}" data-symbol="${esc(c.symbol)}">
           <td class="num rank">${rank}</td>
-          <td class="ticker-cell"><span class="ticker-link">${esc(c.symbol)}</span></td>
-          <td class="company-cell col-name"><span class="company-link">${esc(c.name)}</span></td>
+          <td class="ticker-cell">${tickerCellHtml(c)}</td>
+          <td class="company-cell col-name">${nameCellHtml(c)}</td>
           <td class="num col-price">${fmtPrice(c.price)}</td>
           ${pctCell(c.change)}
           <td class="num">${fmtBig(c.marketCap)}</td>
@@ -205,7 +222,7 @@ function fillMovers(id, rows) {
     .map((c, i) => `
       <tr>
         <td class="num rank">${i + 1}</td>
-        <td class="ticker-cell"><span class="ticker-link">${esc(c.symbol)}</span></td>
+        <td class="ticker-cell">${tickerCellHtml(c)}</td>
         ${pctCell(c.change)}
         <td class="num">${fmtPrice(c.price)}</td>
       </tr>`)
@@ -228,8 +245,8 @@ function renderVolume() {
     .map((c, i) => `
       <tr>
         <td class="num rank">${i + 1}</td>
-        <td class="ticker-cell"><span class="ticker-link">${esc(c.symbol)}</span></td>
-        <td class="company-cell col-name"><span class="company-link">${esc(c.name)}</span></td>
+        <td class="ticker-cell">${tickerCellHtml(c)}</td>
+        <td class="company-cell col-name">${nameCellHtml(c)}</td>
         <td class="num">${fmtBig(c.volume)}</td>
         <td class="num">${fmtBig(c.marketCap)}</td>
       </tr>`)
@@ -252,7 +269,7 @@ function updateQuote() {
   setDelta(document.getElementById("mcapChange"), weighted / total);
 }
 
-// === Heatmap (ported squarified treemap from hodlingbtc) ===
+// === Heatmap (ported squarified treemap from the reference tracker) ===
 const heatmap = (function () {
   const measureCtx = document.createElement("canvas").getContext("2d");
   function widthAt(label, size) {
@@ -344,12 +361,14 @@ const heatmap = (function () {
       for (const v of variants) if (widthAt(v, pctSize) <= avail) { pctText = v; break; }
       while (pctSize > 5 && widthAt(pctText, pctSize) > avail) pctSize--;
       const showPct = widthAt(pctText, pctSize) <= avail && c.h >= tickerSize + pctSize + 4;
-      return '<div class="heatmap-cell" ' +
+      const href = coinHref(c.item.ticker);
+      const tag = href ? "a" : "div";
+      return `<${tag} class="heatmap-cell"${href ? ` href="${href}"` : ""} ` +
         `style="left:${c.x}px;top:${c.y}px;width:${c.w}px;height:${c.h}px;background:${color}" ` +
         `title="${esc(c.item.name)} · ${(pct >= 0 ? "+" : "") + pct.toFixed(2)}%">` +
         `<span class="heatmap-cell__ticker" style="font-size:${tickerSize}px">${esc(displayLabel)}</span>` +
         (showPct ? `<span class="heatmap-cell__pct" style="font-size:${pctSize}px">${pctText}</span>` : "") +
-        "</div>";
+        `</${tag}>`;
     }).join("");
   }
   let resizeTimer;
@@ -360,7 +379,7 @@ const heatmap = (function () {
 // Treemap area weight = sqrt(marketCap) + offset. sqrt compresses the DOGE-vs-
 // everyone gap (raw market cap makes small coins invisible slivers); the offset
 // (~14% of the largest cell's weight) guarantees a visible minimum cell. Mirrors
-// hodlingbtc's regen-heatmap.ps1 `sqrt(btc)+80` intent, scaled to market cap.
+// the reference tracker's regen-heatmap.ps1 `sqrt(btc)+80` intent, scaled to market cap.
 function heatmapSize(mcap, maxCap) {
   const offset = Math.sqrt(Math.max(1, maxCap)) * 0.14;
   return Math.sqrt(Math.max(0, mcap || 0)) + offset;
@@ -452,7 +471,13 @@ syncTopbarHeight();
 window.addEventListener("resize", syncTopbarHeight);
 window.addEventListener("load", syncTopbarHeight);
 
-loadMarket();
+// Load the symbol->page-slug map first so the first render can already link
+// clickable coins, then fetch market data.
+fetch("/data/coins-pages.json", { cache: "no-store" })
+  .then((r) => (r.ok ? r.json() : {}))
+  .then((m) => { pageMap = m || {}; })
+  .catch(() => {})
+  .finally(loadMarket);
 
 // Visibility-aware polling: never fetch while the tab is hidden, and refresh
 // immediately (if data is stale) when the tab comes back to the foreground.

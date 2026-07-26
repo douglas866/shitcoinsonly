@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Live treemap of the top shitcoins by market cap, colored by 24h price change." />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <meta name="color-scheme" content="dark" />
+  <link rel="canonical" href="https://shitcoinsonly.com/heatmap/" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="dns-prefetch" href="https://api.coingecko.com" />
+  <link rel="preconnect" href="https://api.coingecko.com" crossorigin />
+  <title>Shitcoin Heatmap | ShitcoinsOnly</title>
+  <meta property="og:title" content="Shitcoin Heatmap | ShitcoinsOnly" />
+  <meta property="og:description" content="Live treemap of the top shitcoins by market cap, colored by 24h price change." />
+  <meta property="og:image" content="https://shitcoinsonly.com/assets/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:url" content="https://shitcoinsonly.com/heatmap/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="ShitcoinsOnly" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Shitcoin Heatmap | ShitcoinsOnly" />
+  <meta name="twitter:description" content="Live treemap of the top shitcoins by market cap, colored by 24h price change." />
+  <meta name="twitter:image" content="https://shitcoinsonly.com/assets/og-image.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/favicon-192x192.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png" />
+  <style>
+    .panel__head--heatmap{flex-wrap:wrap;gap:8px;align-items:baseline;justify-content:space-between}
+    .heatmap-meta{font-size:11px;color:#b4b4b4;letter-spacing:.06em;text-transform:uppercase}
+    .heatmap-canvas{position:relative;width:100%;aspect-ratio:2 / 1;min-height:360px;background:#050505;border:1px solid #2c2c2c;overflow:hidden;margin-top:10px}
+    .heatmap-cell{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;text-decoration:none;color:#fff;border:1px solid rgba(0,0,0,.4);font-family:var(--mono);overflow:hidden;line-height:1.1;transition:outline .12s ease,z-index 0s}
+    .heatmap-cell:hover{outline:2px solid #fff;z-index:2}
+    .heatmap-cell__ticker{font-weight:700;letter-spacing:.04em;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:clip;padding:0 2px;text-align:center}
+    .heatmap-cell__pct{opacity:.9;margin-top:2px}
+    .heatmap-figure{margin:0;padding:0}
+    .panel-title-link{color:inherit;text-decoration:none}
+    .panel-title-link:hover{color:#ff7a00}
+    .ticker-link,.company-link{color:inherit;text-decoration:none}
+    a.ticker-link:hover,a.company-link:hover{color:#ff7a00}
+    .home-twin-panels{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    @media (max-width:720px){.home-twin-panels{grid-template-columns:1fr}}
+    #marketTable tbody tr[data-rank-hidden]{display:none}
+    #marketTable .company-cell, #volumeTable .company-cell{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    @media (max-width:720px){
+      #marketTable .col-name, #marketTable thead th.col-name{display:none}
+      #marketTable .col-price, #marketTable thead th.col-price{display:none}
+      #volumeTable .col-name, #volumeTable thead th.col-name{display:none}
+    }
+    @media (max-width:640px){
+      .heatmap-canvas{aspect-ratio:4 / 5;min-height:460px}
+      .panel__head--heatmap{flex-direction:column;align-items:flex-start}
+    }
+    .coin-hero{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding:22px 16px 6px}
+    .coin-hero__sym{font-size:34px;font-weight:800;letter-spacing:-.01em;color:#f2f2f2}
+    .coin-hero__name{font-size:18px;color:#b4b4b4}
+    .coin-hero__chain{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#ff7a00;border:1px solid #2c2c2c;border-radius:4px;padding:3px 8px}
+    .coin-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:#1f1f1f;border-top:1px solid #1f1f1f;border-bottom:1px solid #1f1f1f;margin:14px 0 0}
+    .coin-stat{background:#0a0a0a;padding:16px}
+    .coin-stat__label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#777;margin:0 0 6px}
+    .coin-stat__value{font-size:20px;font-weight:700;color:#f2f2f2;font-variant-numeric:tabular-nums}
+    @media (max-width:720px){.coin-stats{grid-template-columns:repeat(2,1fr)}}
+    .coin-body{padding:18px 16px;color:#cfcfcf;line-height:1.7;font-size:15.5px;max-width:70ch}
+    .coin-back{display:inline-block;margin:8px 16px 24px;color:#ff7a00;font-size:13px;letter-spacing:.04em;text-transform:uppercase;text-decoration:none}
+    .coin-back:hover{text-decoration:underline}
+  </style>
+</head>
+<body>
+  <h1 class="sr-only">Shitcoin Heatmap | ShitcoinsOnly</h1>
+  <header class="topbar">
+    <div class="topbar__brand">
+      <a href="/" class="brand-link" aria-label="ShitcoinsOnly home"><span class="brand__name">SHITCOINS</span><span class="brand__mark">ONLY</span></a>
+    </div>
+    <div class="topbar__quote" aria-label="Tracked memecoin market cap"><span class="quote__label">MCAP</span><span id="mcapValue" class="quote__value">&mdash;</span><span id="mcapChange" class="quote__delta">&mdash;</span></div>
+  </header>
+  <section class="ticker" aria-label="Section navigator">
+    <div class="topbar__carousel" aria-label="Section navigator"><div class="topbar__carousel-track"><a href="/market/">TOP 100 SHITCOINS</a><a href="/heatmap/">LIVE HEATMAP</a><a href="/gainers/">TOP GAINERS 24H</a><a href="/losers/">TOP LOSERS 24H</a><a href="/volume/">HIGHEST VOLUME</a><a href="/market/">RANKED BY MARKET CAP</a><a href="/market/">MEMECOINS ONLY</a><a href="/market/">TOP 100 SHITCOINS</a><a href="/heatmap/">LIVE HEATMAP</a><a href="/gainers/">TOP GAINERS 24H</a><a href="/losers/">TOP LOSERS 24H</a><a href="/volume/">HIGHEST VOLUME</a><a href="/market/">RANKED BY MARKET CAP</a><a href="/market/">MEMECOINS ONLY</a></div></div>
+  </section>
+  <main class="layout">
+    <section id="heatmap" class="panel">
+      <header class="panel__head panel__head--heatmap"><h2 class="panel__title">HEATMAP</h2><time id="heatmapUpdated" class="heatmap-meta">&mdash;</time></header>
+      <figure class="heatmap-figure"><div id="heatmapCanvas" class="heatmap-canvas" role="img" aria-label="Treemap of top shitcoins by market cap, colored by 24h change"><noscript>Enable JavaScript to load the live heatmap.</noscript></div></figure>
+      <script id="heatmapData" type="application/json">{"updatedAt":"2026-07-26T22:31:30.378Z","coins":[{"symbol":"DOGE","name":"Dogecoin","size":121407.89347045768,"changePct":1.2356},{"symbol":"SHIB","name":"Shiba Inu","size":70717.27822269821,"changePct":7.9469},{"symbol":"M","name":"MemeCore","size":55094.238761986686,"changePct":0.10836},{"symbol":"PEPE","name":"Pepe","size":50088.35870089395,"changePct":6.82066},{"symbol":"PUMP","name":"Pump.fun","size":43345.43032264842,"changePct":14.43741},{"symbol":"币安人生","name":"币安人生 (BinanceLife)","size":40530.40913231234,"changePct":5.49254},{"symbol":"PENGU","name":"Pudgy Penguins","size":34868.18262529642,"changePct":1.86913},{"symbol":"TRUMP","name":"Official Trump","size":34806.98834914941,"changePct":1.63012},{"symbol":"SPX","name":"SPX6900","size":32712.322717330608,"changePct":2.6093},{"symbol":"BONK","name":"Bonk","size":31440.129471850676,"changePct":0.27057},{"symbol":"PEANUT","name":"Peanut","size":30015.412986568677,"changePct":null},{"symbol":"FLOKI","name":"FLOKI","size":29576.087644588497,"changePct":0.70641},{"symbol":"APEPE","name":"Ape and Pepe","size":29102.658797689295,"changePct":0.27613},{"symbol":"COCO","name":"coco","size":28808.892104787446,"changePct":-0.26581},{"symbol":"B","name":"BUILDon","size":28332.67566961513,"changePct":14.87115},{"symbol":"WIF","name":"dogwifhat","size":27302.353780183934,"changePct":-1.58755},{"symbol":"FARTCOIN","name":"Fartcoin","size":26366.99210801104,"changePct":4.62614},{"symbol":"TIBBIR","name":"Ribbita by Virtuals","size":25308.786692270194,"changePct":9.26246},{"symbol":"CHEEMS","name":"Cheems Token","size":24615.947204770368,"changePct":2.1669},{"symbol":"SMILEK","name":"Smilek to the Bank","size":24259.80927105694,"changePct":0.00377},{"symbol":"WOULD","name":"would","size":23969.118047956465,"changePct":2.56763},{"symbol":"ORDI","name":"ORDI","size":23867.637094254715,"changePct":5.65569},{"symbol":"ANSEM","name":"The Black Bull","size":23747.491922183894,"changePct":3.00281},{"symbol":"MELANIA","name":"Melania Meme","size":23683.216156604773,"changePct":1.73459},{"symbol":"BAN","name":"Comedian","size":23486.123757548172,"changePct":-0.84315},{"symbol":"BANANAS31","name":"Banana For Scale","size":23320.194501642298,"changePct":-0.56988},{"symbol":"BASEDHYPE","name":"BasedHype","size":22925.647428089356,"changePct":7.46082},{"symbol":"DOG","name":"Dog (Bitcoin)","size":22837.838489978516,"changePct":3.25615},{"symbol":"MHORSE","name":"MEME HORSE","size":22687.130132553222,"changePct":-0.01717},{"symbol":"USELESS","name":"Useless Coin","size":22552.769957005854,"changePct":5.30295},{"symbol":"BABYDOGE","name":"Baby Doge Coin","size":22441.549320061236,"changePct":0.29366},{"symbol":"TURBO","name":"Turbo","size":22435.36008193526,"changePct":1.94241},{"symbol":"APES","name":"APES","size":22254.538645726498,"changePct":null},{"symbol":"AGENTFUN","name":"AgentFun.AI","size":22112.82425445987,"changePct":8.18397},{"symbol":"TROLL","name":"TROLL","size":22038.737235496672,"changePct":25.74979},{"symbol":"NPC","name":"Non-Playable Coin","size":21857.50166195114,"changePct":2.43199},{"symbol":"TOSHI","name":"Toshi","size":21757.904487777014,"changePct":1.82846},{"symbol":"UTYA","name":"Utya","size":21738.157151886175,"changePct":8.41217},{"symbol":"BRETT","name":"Brett","size":21737.0143314733,"changePct":4.34348},{"symbol":"DEGEN","name":"Degen","size":21676.846445176536,"changePct":2.79144},{"symbol":"LION","name":"Loaded Lions","size":21619.238751037912,"changePct":0.94932},{"symbol":"REKT","name":"Rekt","size":21589.304462758573,"changePct":1.19652},{"symbol":"CASHCAT","name":"Cash Cat","size":21548.054718708223,"changePct":-15.7468},{"symbol":"FO","name":"Official FO","size":21529.705427159395,"changePct":-2.54072},{"symbol":"OSK","name":"OSK","size":21522.37058378928,"changePct":0.24132},{"symbol":"TBB","name":"The Bitcoin Bull","size":21517.66298876082,"changePct":7.03961},{"symbol":"PNUT","name":"Peanut the Squirrel","size":21503.600643715203,"changePct":2.96768},{"symbol":"POPCAT","name":"Popcat","size":21435.79746312338,"changePct":0.57155},{"symbol":"MOG","name":"Mog Coin","size":21315.192185255702,"changePct":5.79802},{"symbol":"PURR","name":"Purr","size":21222.325164218637,"changePct":5.46863},{"symbol":"YZY","name":"YZY","size":21094.184851518992,"changePct":0.12984},{"symbol":"MOODENG","name":"Moo Deng","size":21057.780015043852,"changePct":2.3059},{"symbol":"GOHOME","name":"GOHOME","size":21051.242911302706,"changePct":0.74735},{"symbol":"SIREN","name":"Siren","size":21037.98297616975,"changePct":-2.69972},{"symbol":"ZEREBRO","name":"Zerebro","size":20965.12873938404,"changePct":1.81449},{"symbol":"GEKKO","name":"GEKKO","size":20949.077856356264,"changePct":-2.63757},{"symbol":"BOME","name":"BOOK OF MEME","size":20936.886232790195,"changePct":16.87316},{"symbol":"BURN","name":"BurnedFi","size":20918.227385590282,"changePct":4.9103},{"symbol":"NOT","name":"Notcoin","size":20918.038067032296,"changePct":0.70931},{"symbol":"AIX","name":"AI XOVIA","size":20746.914934523018,"changePct":-0.29201},{"symbol":"MEME","name":"Memecoin","size":20739.517542663223,"changePct":0.21762},{"symbol":"AINTI","name":"AIntivirus","size":20716.935204061363,"changePct":null},{"symbol":"AMERICA","name":"America Party","size":20685.490951703603,"changePct":0.5248},{"symbol":"TDCCP","name":"TDCCP","size":20611.668433755203,"changePct":1.90707},{"symbol":"ELON","name":"Dogelon Mars","size":20572.91091059715,"changePct":3.6186},{"symbol":"MEW","name":"cat in a dogs world","size":20539.844588410164,"changePct":-0.06001},{"symbol":"PEOPLE","name":"ConstitutionDAO","size":20531.91045772846,"changePct":10.38609},{"symbol":"FROG","name":"just a frog","size":20440.109645552657,"changePct":0},{"symbol":"ASTEROID","name":"Asteroid Shiba","size":20434.17240532212,"changePct":2.71953},{"symbol":"WKC","name":"Wiki Cat","size":20347.772013122616,"changePct":-1.39216},{"symbol":"GIGGLE","name":"Giggle Fund","size":20111.986011205583,"changePct":3.77362},{"symbol":"NYC","name":"NYC","size":20051.793714635463,"changePct":null},{"symbol":"NEIRO","name":"Neiro","size":20025.919955469624,"changePct":2.42655},{"symbol":"KEKIUS","name":"Kekius Maximus","size":19931.474370767774,"changePct":-5.09594},{"symbol":"TRILLIONS","name":"Trillions","size":19673.337214043593,"changePct":-0.00104},{"symbol":"SNEK","name":"Snek","size":19606.78665126516,"changePct":2.58284},{"symbol":"WOJAK","name":"wojak","size":19403.635049351942,"changePct":7.63862},{"symbol":"HUNDRED","name":"HUNDRED","size":19401.269885064157,"changePct":-0.40694},{"symbol":"GIGA","name":"Gigachad","size":19399.793196185434,"changePct":2.33838},{"symbol":"龙虾","name":"龙虾 (Lobster)","size":19302.05470295474,"changePct":12.9407},{"symbol":"DOGS","name":"Dogs","size":19290.709118838542,"changePct":0.70202},{"symbol":"PUFF","name":"Puff The Dragon","size":19262.99250220635,"changePct":-3.6527},{"symbol":"AIXBT","name":"aixbt","size":19202.476212512163,"changePct":2.30527},{"symbol":"MPC","name":"My Paqman Coin","size":19167.76748931184,"changePct":null},{"symbol":"67","name":"SIXSEVEN","size":19134.323176190683,"changePct":-9.24382},{"symbol":"LB","name":"LoveBit","size":19102.73712976476,"changePct":-0.11577},{"symbol":"PTGC","name":"The Grays Currency","size":19085.15050489303,"changePct":7.68613},{"symbol":"530A","name":"buy and retire","size":19079.799216656455,"changePct":22453.43927},{"symbol":"NEET","name":"Not in Employment, Education, or Training","size":19073.690270415915,"changePct":0.90826},{"symbol":"BIRB","name":"Moonbirds","size":19068.61963774846,"changePct":3.25882},{"symbol":"PIPPIN","name":"pippin","size":19012.43371204023,"changePct":0.2691},{"symbol":"FUZZY","name":"Fuzzybear","size":18995.327552632116,"changePct":0.67185},{"symbol":"PYTHIA","name":"PYTHIA","size":18986.76362366202,"changePct":3.50216},{"symbol":"TRIPLET","name":"Tung Tung Tung Sahur","size":18971.35145208673,"changePct":-11.33364},{"symbol":"ARARA","name":"Araracoin","size":18887.965404668903,"changePct":-0.13411},{"symbol":"COAR","name":"Chinese Oil Asset Reserve","size":18861.718909601397,"changePct":0},{"symbol":"哈基米","name":"哈基米 (Hajimi)","size":18848.564985658144,"changePct":5.07842},{"symbol":"MARSMI","name":"MarsMi","size":18805.325470109598,"changePct":2.19179}]}</script>
+    </section>
+  </main>
+  <footer class="footer">
+    <div class="footer__links"><span class="footer__source">DATA</span><span class="footer__sep">&middot;</span><span class="footer__source">COINGECKO</span></div>
+    <p class="footer__legal">&copy; <span id="year">2026</span> SHITCOINSONLY. Independent tracker. For informational purposes only. Not investment advice. Shitcoins and memecoins are extremely high-risk and can lose all value. Data displayed may be delayed, incomplete, or inaccurate and should be independently verified before use.</p>
+  </footer>
+  <script src="/js/app.js" defer></script>
+</body>
+</html>

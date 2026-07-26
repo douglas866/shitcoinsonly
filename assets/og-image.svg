@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <rect width="1200" height="630" fill="#0a0a0a"/>
   <rect x="0" y="0" width="1200" height="8" fill="#ff7a00"/>
-  <g font-family="'Inter', system-ui, sans-serif" text-anchor="middle">
+  <g font-family="Arial, Helvetica, sans-serif" text-anchor="middle">
     <text x="600" y="300" font-size="104" font-weight="700" letter-spacing="2">
       <tspan fill="#f2f2f2">SHITCOINS</tspan><tspan fill="#ff7a00">ONLY</tspan>
     </text>
-    <text x="600" y="372" font-size="30" font-weight="500" fill="#b4b4b4" letter-spacing="6">
-      TOP 100 SHITCOINS &#183; LIVE MARKET CAP &#183; 24H &#183; HEATMAP
+    <text x="600" y="372" font-size="28" font-weight="500" fill="#b4b4b4" letter-spacing="5">
+      TOP 100 SHITCOINS &#183; MARKET CAP &#183; 24H &#183; HEATMAP
     </text>
     <text x="600" y="470" font-size="22" font-weight="400" fill="#777" letter-spacing="4">
       shitcoinsonly.com

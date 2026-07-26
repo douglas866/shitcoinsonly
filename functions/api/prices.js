@@ -11,7 +11,7 @@ const MAX_IDS = 250;
 const MAX_PER_PAGE = 250;
 
 // Best-effort per-IP burst limiter (in-isolate memory): 30 requests / 60s.
-// Mirrors hodlingbtc's prices.js. Does not coordinate across Cloudflare PoPs,
+// Mirrors the reference tracker's prices.js. Does not coordinate across Cloudflare PoPs,
 // but is enough to stop a single runaway tab from hammering the endpoint. The
 // 60s edge cache does the real heavy lifting of protecting CoinGecko's limit.
 const RATE_LIMIT_WINDOW_MS = 60_000;
