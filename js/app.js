@@ -16,7 +16,7 @@ const MAX_PAGES = 10; // 10 pages x 10 = top 100
 const API_URL = "/api/prices?per_page=150";
 const CG_FALLBACK =
   "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=150&page=1&sparkline=false&price_change_percentage=24h,7d";
-let excludeSet = new Set(["BTC", "USDT", "USDC", "USDS", "DAI", "USDE", "FDUSD", "TUSD", "USDD", "PYUSD", "USD1", "BUSD", "GUSD", "FRAX", "LUSD", "USDP", "EURC", "USDG", "RLUSD", "USR", "USDX"]);
+let excludeSet = new Set(["BTC", "USDT", "USDC", "USDS", "DAI", "USDE", "FDUSD", "TUSD", "USDD", "PYUSD", "USD1", "BUSD", "GUSD", "FRAX", "LUSD", "USDP", "EURC", "USDG", "RLUSD", "USR", "USDX", "USYC", "USDY", "BUIDL", "USD0", "OUSG", "USTB", "BENJI", "USDL", "STABLE", "EUTBL", "EURSAFO", "JTRSY", "JUSD", "SYRUPUSDC"]);
 const REFRESH_MS = 60_000;
 
 const fmtPctNum = (n) => `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
@@ -117,7 +117,7 @@ async function loadMarket() {
         volume: m.total_volume,
       }))
       .filter((c) => isFinite(c.marketCap) && c.marketCap > 0)
-      .filter((c) => c.id !== "bitcoin" && !excludeSet.has(c.symbol)) // no BTC, no stablecoins
+      .filter((c) => c.id !== "bitcoin" && !excludeSet.has(c.symbol)) // no BTC, no stablecoins (list from /data/exclude.json)
       .sort((a, b) => b.marketCap - a.marketCap)
       // Dedupe by symbol (CoinGecko lists e.g. DOGE + Binance-Peg DOGE): keep
       // the highest-market-cap instance, which sort() already placed first.

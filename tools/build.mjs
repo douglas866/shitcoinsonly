@@ -21,8 +21,15 @@ const UA = { headers: { accept: "application/json", "user-agent": "ShitcoinsOnly
 // out in main() so the site tracks the top 100 "shitcoins" (everything but BTC).
 const MARKETS =
   "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=150&page=1&sparkline=false&price_change_percentage=24h,7d";
-const STABLECOINS =
-  "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&category=stablecoins&order=market_cap_desc&per_page=100&page=1&sparkline=false";
+// A coin "walks like a peg": priced ~1 USD/EUR AND essentially flat over both
+// 24h and 7d. Catches stablecoins + tokenized-treasury/yield-dollar tokens that
+// slip through category lists, without touching real coins (which move) or gold
+// tokens (priced in the thousands).
+function isPegged(c) {
+  return isFinite(c.price) && c.price >= 0.9 && c.price <= 1.15 &&
+    isFinite(c.change) && Math.abs(c.change) <= 0.8 &&
+    (!isFinite(c.change7d) || Math.abs(c.change7d) <= 2.5);
+}
 
 // ---------- formatting ----------
 const fmtPctNum = (n) => `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
@@ -346,13 +353,20 @@ function coinPage(c) {
 // ---------- main ----------
 async function main() {
   const raw = await (await fetch(MARKETS, UA)).json();
-  // Live stablecoin list (symbols) to exclude, plus Bitcoin (by id).
-  let stableSymbols = [];
-  try {
-    const st = await (await fetch(STABLECOINS, UA)).json();
-    stableSymbols = (Array.isArray(st) ? st : []).map((m) => (m.symbol || "").toUpperCase()).filter(Boolean);
-  } catch {}
-  const exclude = new Set(["BTC", ...stableSymbols]);
+  // Exclude Bitcoin (by id) plus every USD-pegged asset: classic stablecoins AND
+  // tokenized-treasury / USD-yield tokens (USYC, USDY, BUIDL, ...) which sit ~$1
+  // and aren't shitcoins. Pulled live from CoinGecko categories so it self-updates.
+  const EXCLUDE_CATEGORIES = ["stablecoins", "tokenized-treasury-bills", "eur-stablecoin", "yield-bearing-stablecoins"];
+  // Known USD/EUR-pegged, tokenized-treasury and yield-dollar tokens that CoinGecko
+  // scatters across RWA categories and doesn't always tag as stablecoins. Explicit
+  // list (no price heuristic — that wrongly caught real coins like XRP when flat).
+  const exclude = new Set(["BTC", "USYC", "USDY", "BUIDL", "USD0", "USD0++", "OUSG", "USTB", "BENJI", "USDL", "USDO", "JAAA", "SYRUPUSDC", "JUSD", "STABLE", "EUTBL", "EURSAFO", "JTRSY", "JTRSY"]);
+  for (const cat of EXCLUDE_CATEGORIES) {
+    try {
+      const st = await (await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&category=${cat}&order=market_cap_desc&per_page=100&page=1&sparkline=false`, UA)).json();
+      (Array.isArray(st) ? st : []).forEach((m) => { if (m.symbol) exclude.add(m.symbol.toUpperCase()); });
+    } catch {}
+  }
   const seen = new Set();
   const coins = raw
     .map((m) => ({ id: m.id, symbol: (m.symbol || "").toUpperCase(), name: m.name || "", price: m.current_price, change: m.price_change_percentage_24h, change7d: (m.price_change_percentage_7d_in_currency != null ? m.price_change_percentage_7d_in_currency : m.price_change_percentage_7d), marketCap: m.market_cap, volume: m.total_volume, rank: m.market_cap_rank }))
