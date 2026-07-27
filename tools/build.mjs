@@ -15,7 +15,12 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const INDEX = path.join(ROOT, "index.html");
 const ORIGIN = "https://shitcoinsonly.com";
-const UA = { headers: { accept: "application/json", "user-agent": "ShitcoinsOnly build" } };
+// Optional CoinGecko Demo API key (env CG_API_KEY). Lets the build fetch from a
+// datacenter IP (GitHub Actions runner) without hitting the public 429 wall, and
+// is harmless on the exchange APIs (they ignore the header).
+const CG_KEY = process.env.CG_API_KEY || "";
+const UA = { headers: Object.assign({ accept: "application/json", "user-agent": "ShitcoinsOnly build" }, CG_KEY ? { "x-cg-demo-api-key": CG_KEY } : {}) };
+const META_CACHE = path.join(ROOT, "data", "coin-meta.json");
 
 // The whole market's top coins by market cap. Bitcoin + stablecoins are filtered
 // out in main() so the site tracks the top 100 "shitcoins" (everything but BTC).
@@ -413,16 +418,33 @@ async function main() {
     if (on.length >= 2) { c.on = on; eligible.push(c); }
   }
 
-  // Enrich eligible coins with chain + launch year (throttled to respect rate limit)
+  // Enrich eligible coins with chain + launch year. This is STATIC data (a coin's
+  // chain and genesis year never change), so it is cached in data/coin-meta.json
+  // and we only hit CoinGecko for coins we've never seen. That takes a full run
+  // from ~72 CoinGecko calls down to ~0-3 (just new top-100 entrants), which keeps
+  // an automated cron comfortably inside CoinGecko's rate + monthly quota.
+  let meta = {};
+  try { meta = JSON.parse(await readFile(META_CACHE, "utf8")) || {}; } catch {}
+  let fetched = 0;
   for (const c of eligible) {
-    try {
-      const d = await (await fetch(`https://api.coingecko.com/api/v3/coins/${c.id}?localization=false&tickers=false&market_data=false&community_data=false&developer_data=false&sparkline=false`, UA)).json();
-      c.platformId = d.asset_platform_id || null;
-      c.year = d.genesis_date ? String(d.genesis_date).slice(0, 4) : null;
-      if (!c.rank && d.market_cap_rank) c.rank = d.market_cap_rank;
-    } catch {}
-    await sleep(2600);
+    const cached = meta[c.id];
+    if (cached && "platformId" in cached) {
+      c.platformId = cached.platformId;
+      c.year = cached.year;
+    } else {
+      try {
+        const d = await (await fetch(`https://api.coingecko.com/api/v3/coins/${c.id}?localization=false&tickers=false&market_data=false&community_data=false&developer_data=false&sparkline=false`, UA)).json();
+        c.platformId = d.asset_platform_id || null;
+        c.year = d.genesis_date ? String(d.genesis_date).slice(0, 4) : null;
+        if (!c.rank && d.market_cap_rank) c.rank = d.market_cap_rank;
+      } catch {}
+      meta[c.id] = { platformId: c.platformId ?? null, year: c.year ?? null };
+      fetched++;
+      await sleep(2600);
+    }
   }
+  try { await mkdir(path.dirname(META_CACHE), { recursive: true }); await writeFile(META_CACHE, JSON.stringify(meta, null, 0), "utf8"); } catch {}
+  console.log(`Coin meta: ${eligible.length} eligible, ${fetched} freshly fetched, ${eligible.length - fetched} from cache.`);
 
   const pageSet = new Map(eligible.map((c) => [c.symbol, c.id]));
 

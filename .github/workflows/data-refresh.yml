@@ -1,0 +1,69 @@
+name: Data refresh
+
+# Rebuilds the shitcoin SSR snapshot + daily index history from CoinGecko and
+# deploys it to the shitcoinsonly Cloudflare Pages project.
+#
+# FULLY SEPARATE from hodlingbtc: different repo, different Pages project,
+# different secrets. This workflow lives only in the shitcoinsonly repo and
+# cannot read, write, or trigger anything in the hodlingbtc repo.
+#
+# Budget (deliberately conservative — do not raise without re-checking both):
+#   * CoinGecko: data/coin-meta.json caches the static per-coin data (chain +
+#     launch year), so a run makes only ~5-8 CoinGecko calls (markets + the 4
+#     exclusion-category lists + any BRAND-NEW top-100 entrants). At 4 runs/day
+#     that is ~1,000 calls/month against the free Demo quota of 10,000/month.
+#   * GitHub Actions: ~1-2 min/run x ~122 runs/month = ~240 min/month against the
+#     account-wide 2,000 min/month free tier that hodlingbtc also draws on.
+# If either ever gets close, drop the cron to every 8-12h — the client already
+# refreshes prices live every 60s, so the snapshot cadence is not critical.
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"   # 4/day (00, 06, 12, 18 UTC)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: shitcoin-data-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Rebuild snapshot
+        env:
+          CG_API_KEY: ${{ secrets.CG_API_KEY }}
+        run: node tools/build.mjs
+
+      - name: Commit if changed
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add -A
+            git commit -m "Data refresh"
+            for i in 1 2 3; do
+              git pull --rebase --autostash || true
+              if git push; then break; fi
+              sleep 5
+            done
+          else
+            echo "No changes."
+          fi
+
+      - name: Deploy to Cloudflare Pages
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx --yes wrangler@latest pages deploy . --project-name shitcoinsonly --branch main --commit-dirty=true
