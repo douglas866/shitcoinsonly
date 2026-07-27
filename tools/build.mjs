@@ -386,11 +386,14 @@ async function main() {
   // Exclude Bitcoin (by id) plus every USD-pegged asset: classic stablecoins AND
   // tokenized-treasury / USD-yield tokens (USYC, USDY, BUIDL, ...) which sit ~$1
   // and aren't shitcoins. Pulled live from CoinGecko categories so it self-updates.
-  const EXCLUDE_CATEGORIES = ["stablecoins", "tokenized-treasury-bills", "eur-stablecoin", "yield-bearing-stablecoins"];
+  // Also excludes tokenized-private-credit (e.g. FIGR_HELOC, a tokenized HELOC debt
+  // instrument that CoinGecko ranks ~#9 by "market cap" but is a real-world credit
+  // product, not a tradeable coin — CoinMarketCap keeps it out of the top ranks too).
+  const EXCLUDE_CATEGORIES = ["stablecoins", "tokenized-treasury-bills", "eur-stablecoin", "yield-bearing-stablecoins", "tokenized-private-credit"];
   // Known USD/EUR-pegged, tokenized-treasury and yield-dollar tokens that CoinGecko
   // scatters across RWA categories and doesn't always tag as stablecoins. Explicit
   // list (no price heuristic — that wrongly caught real coins like XRP when flat).
-  const exclude = new Set(["BTC", "USYC", "USDY", "BUIDL", "USD0", "USD0++", "OUSG", "USTB", "BENJI", "USDL", "USDO", "JAAA", "SYRUPUSDC", "JUSD", "STABLE", "EUTBL", "EURSAFO", "JTRSY", "JTRSY"]);
+  const exclude = new Set(["BTC", "USYC", "USDY", "BUIDL", "USD0", "USD0++", "OUSG", "USTB", "BENJI", "USDL", "USDO", "JAAA", "SYRUPUSDC", "JUSD", "STABLE", "EUTBL", "EURSAFO", "JTRSY", "JTRSY", "FIGR_HELOC"]);
   for (const cat of EXCLUDE_CATEGORIES) {
     try {
       const st = await (await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&category=${cat}&order=market_cap_desc&per_page=100&page=1&sparkline=false`, UA)).json();
