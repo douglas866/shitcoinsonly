@@ -223,8 +223,13 @@ function renderMarket() {
 function renderMovers() {
   // Exclude new-listing garbage (|24h| > 900% is a data artifact, not a real move).
   const eligible = marketCache.filter((c) => isFinite(c.change) && Math.abs(c.change) <= 900);
-  const gainers = [...eligible].sort((a, b) => b.change - a.change).slice(0, 10);
-  const losers = [...eligible].sort((a, b) => a.change - b.change).slice(0, 10);
+  // Dedicated /gainers/ and /losers/ pages show the FULL ranked list; the homepage
+  // panels stay at 10.
+  const path = location.pathname;
+  const gLimit = /\/gainers\//.test(path) ? Infinity : 10;
+  const lLimit = /\/losers\//.test(path) ? Infinity : 10;
+  const gainers = [...eligible].sort((a, b) => b.change - a.change).slice(0, gLimit);
+  const losers = [...eligible].sort((a, b) => a.change - b.change).slice(0, lLimit);
   fillMovers("gainersTable", gainers);
   fillMovers("losersTable", losers);
 }
@@ -251,10 +256,11 @@ function fillMovers(id, rows) {
 function renderVolume() {
   const tbody = document.querySelector("#volumeTable tbody");
   if (!tbody) return;
+  const vLimit = /\/volume\//.test(location.pathname) ? Infinity : 10;
   const rows = [...marketCache]
     .filter((c) => isFinite(c.volume) && c.volume > 0)
     .sort((a, b) => b.volume - a.volume)
-    .slice(0, 10);
+    .slice(0, vLimit);
   if (!rows.length) {
     tbody.innerHTML = `<tr><td colspan="5" class="loading">NO DATA</td></tr>`;
     return;

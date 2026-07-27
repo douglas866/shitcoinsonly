@@ -457,6 +457,11 @@ async function main() {
   const losers = [...movers].sort((a, b) => a.change - b.change).slice(0, 10);
   const volume = [...coins].filter((c) => isFinite(c.volume) && c.volume > 0).sort((a, b) => b.volume - a.volume).slice(0, 10);
   const bestWeek = coins.filter((c) => isFinite(c.change7d) && Math.abs(c.change7d) <= 1500).sort((a, b) => b.change7d - a.change7d).slice(0, 10);
+  // Full leaderboards for the DEDICATED section pages (homepage panels keep 10).
+  // Clicking a heading should reveal the whole ranked list, not the same 10.
+  const gainersFull = [...movers].sort((a, b) => b.change - a.change);
+  const losersFull = [...movers].sort((a, b) => a.change - b.change);
+  const volumeFull = [...coins].filter((c) => isFinite(c.volume) && c.volume > 0).sort((a, b) => b.volume - a.volume);
   const w24 = weightedChange(coins, "change");
   const w7 = weightedChange(coins, "change7d");
   const island = heatmapIsland(coins);
@@ -479,9 +484,9 @@ async function main() {
   const sections = [
     ["market", page({ title: "Top 100 Shitcoins by Market Cap | ShitcoinsOnly", description: "The top 100 shitcoins ranked by market capitalization, with live price, 24h change and market cap.", canonical: `${ORIGIN}/market/`, main: marketPanel(marketRows(coins, pageSet)), script: `  <script src="/js/app.js" defer></script>` })],
     ["heatmap", page({ title: "Shitcoin Heatmap | ShitcoinsOnly", description: "Live treemap of the top shitcoins by market cap, colored by 24h price change.", canonical: `${ORIGIN}/heatmap/`, main: heatmapPanel(island), script: `  <script src="/js/app.js" defer></script>` })],
-    ["gainers", page({ title: "Top Shitcoin Gainers (24h) | ShitcoinsOnly", description: "The biggest 24-hour gainers among the top 100 shitcoins.", canonical: `${ORIGIN}/gainers/`, main: moverPanel("gainers", "TOP GAINERS &middot; 24H", moverRows(gainers, pageSet)), script: `  <script src="/js/app.js" defer></script>` })],
-    ["losers", page({ title: "Top Shitcoin Losers (24h) | ShitcoinsOnly", description: "The biggest 24-hour losers among the top 100 shitcoins.", canonical: `${ORIGIN}/losers/`, main: moverPanel("losers", "TOP LOSERS &middot; 24H", moverRows(losers, pageSet)), script: `  <script src="/js/app.js" defer></script>` })],
-    ["volume", page({ title: "Highest Volume Shitcoins (24h) | ShitcoinsOnly", description: "The shitcoins with the highest 24-hour trading volume among the top 100 by market cap.", canonical: `${ORIGIN}/volume/`, main: volumePanel(volumeRows(volume, pageSet)), script: `  <script src="/js/app.js" defer></script>` })],
+    ["gainers", page({ title: "Top Shitcoin Gainers (24h) | ShitcoinsOnly", description: "Every one of the top 100 shitcoins ranked by 24-hour gain, best to worst.", canonical: `${ORIGIN}/gainers/`, main: moverPanel("gainers", "TOP GAINERS &middot; 24H", moverRows(gainersFull, pageSet)), script: `  <script src="/js/app.js" defer></script>` })],
+    ["losers", page({ title: "Top Shitcoin Losers (24h) | ShitcoinsOnly", description: "Every one of the top 100 shitcoins ranked by 24-hour loss, worst to best.", canonical: `${ORIGIN}/losers/`, main: moverPanel("losers", "TOP LOSERS &middot; 24H", moverRows(losersFull, pageSet)), script: `  <script src="/js/app.js" defer></script>` })],
+    ["volume", page({ title: "Highest Volume Shitcoins (24h) | ShitcoinsOnly", description: "All top 100 shitcoins ranked by 24-hour trading volume.", canonical: `${ORIGIN}/volume/`, main: volumePanel(volumeRows(volumeFull, pageSet)), script: `  <script src="/js/app.js" defer></script>` })],
     ["index", page({ title: "Daily Shitcoins Index | ShitcoinsOnly", description: "A market-cap-weighted index of the top 100 shitcoins by 24h and 7d performance, snapshotted every 4 hours. Index 100 = flat.", canonical: `${ORIGIN}/index/`, main: indexPanel(w24, w7, coins.length, updatedStamp, nowIso) + "\n" + marketPanel(marketRows(coins, pageSet)), script: `  <script src="/js/app.js" defer></script>` })],
   ];
   for (const [slug, out] of sections) {
