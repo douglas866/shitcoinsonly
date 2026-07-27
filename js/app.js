@@ -48,9 +48,14 @@ function esc(s) {
 // Symbol -> per-coin-page slug (only coins listed on >=2 major exchanges have a
 // page; the rest render as plain text). Loaded from /data/coins-pages.json.
 let pageMap = {};
+let logoMap = {}; // coin id -> "<id>.<ext>" self-hosted logo file
 function coinHref(symbol) {
   const s = pageMap[symbol];
   return s ? `/coin/${s}/` : null;
+}
+function logoImg(c) {
+  const f = c && c.id && logoMap[c.id];
+  return f ? `<img class="coin-ico" src="/assets/coins/${f}" width="18" height="18" alt="" loading="lazy" decoding="async">` : "";
 }
 const BRAND = { ETH:"#7a9cff", BNB:"#f3ba2f", XRP:"#4bb8ff", SOL:"#14f195", TRX:"#ff4b4b", DOGE:"#e0c04a", SHIB:"#ff6c2f", PEPE:"#63d15a", ADA:"#3e78e0", AVAX:"#ff5a5b", LINK:"#4b8af5", DOT:"#ff45a0", XLM:"#4bccf0", LTC:"#8fb0e0", XMR:"#ff8a3d", ATOM:"#8f9bef", UNI:"#ff5fb2", AAVE:"#c86ec0", NEAR:"#2ff0a0", ARB:"#4aa8f0", POL:"#a86bff", MATIC:"#a86bff", HBAR:"#a0acc4", BCH:"#4ec26a", CRO:"#6b8cff", SUI:"#4da8ff", APT:"#3ad8c8", INJ:"#4fb8ff", TIA:"#9a6cf6", RENDER:"#ff6a4c", FIL:"#4ec3e0", ALGO:"#cfcfe0", ICP:"#e85fa0", CRV:"#7bd07b", LDO:"#5fd0e0", PENGU:"#7ec8ff", TRUMP:"#e0b84a", PYTH:"#9a6cf6", JUP:"#4fd8c8", ZEC:"#f4b728", DASH:"#3aa8e0", ETC:"#4ec26a", HYPE:"#3fe0c0", VET:"#4ab0f0", TAO:"#dcdce0", ENA:"#cfcfe0", SKY:"#4fb0ff", WLD:"#e0e0e6", MORPHO:"#6b8cff", CAKE:"#4fd0e0", AERO:"#4fa8ff", SEI:"#e85a5a", JTO:"#4fd8c8", GNO:"#4fd0a0", ONDO:"#4a8fff", KAS:"#4ec6b0", SPX:"#e0b84a", VIRTUAL:"#6bb0ff", FET:"#6b8cff", SUN:"#f3ba2f", QNT:"#dcdce0", OKB:"#4b8af5", KCS:"#4fd0a0", GT:"#e05a7a", NEXO:"#4a6fff", LEO:"#f3ba2f", WBT:"#4fb0ff", MNT:"#8fa0b4", BGB:"#4fd0e0", XAUT:"#e0b84a", PAXG:"#e0c84a", KAU:"#e0c84a", WLFI:"#e0b84a", ASTER:"#a86bff", PI:"#c9a0ff", JST:"#5fd0e0", BDX:"#6b8cff", XDC:"#4fb0d0", HASH:"#7a9cff", ETHFI:"#7a9cff", NIGHT:"#8f9bef", KAITO:"#4fd8c8", MEME:"#e0b84a", CC:"#cfcfe0" };
 function brandColor(sym) {
@@ -60,8 +65,8 @@ function brandColor(sym) {
   return `hsl(${h % 360} 72% 66%)`;
 }
 function tickerCellHtml(c) {
-  const h = coinHref(c.symbol), t = esc(c.symbol), col = brandColor(c.symbol);
-  return h ? `<a class="ticker-link" style="color:${col}" href="${h}">${t}</a>` : `<span class="ticker-link" style="color:${col}">${t}</span>`;
+  const h = coinHref(c.symbol), t = esc(c.symbol), col = brandColor(c.symbol), ico = logoImg(c);
+  return h ? `${ico}<a class="ticker-link" style="color:${col}" href="${h}">${t}</a>` : `${ico}<span class="ticker-link" style="color:${col}">${t}</span>`;
 }
 function nameCellHtml(c) {
   const h = coinHref(c.symbol), t = esc(c.name);
@@ -553,8 +558,10 @@ window.addEventListener("load", syncTopbarHeight);
 Promise.all([
   fetch("/data/coins-pages.json", { cache: "no-store" }).then((r) => (r.ok ? r.json() : {})).catch(() => ({})),
   fetch("/data/exclude.json", { cache: "no-store" }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
-]).then(([pm, ex]) => {
+  fetch("/data/coin-logos-map.json", { cache: "no-store" }).then((r) => (r.ok ? r.json() : {})).catch(() => ({})),
+]).then(([pm, ex, lg]) => {
   pageMap = pm || {};
+  logoMap = lg || {};
   (ex || []).forEach((s) => excludeSet.add(String(s).toUpperCase()));
 }).finally(loadMarket);
 

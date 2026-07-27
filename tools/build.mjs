@@ -21,6 +21,12 @@ const ORIGIN = "https://shitcoinsonly.com";
 const CG_KEY = process.env.CG_API_KEY || "";
 const UA = { headers: Object.assign({ accept: "application/json", "user-agent": "ShitcoinsOnly build" }, CG_KEY ? { "x-cg-demo-api-key": CG_KEY } : {}) };
 const META_CACHE = path.join(ROOT, "data", "coin-meta.json");
+const LOGOS_MAP = path.join(ROOT, "data", "coin-logos-map.json");
+let LOGOS = {}; // id -> "<id>.<ext>" (self-hosted logo), loaded in main()
+function logoImg(coin) {
+  const f = LOGOS[coin.id];
+  return f ? `<img class="coin-ico" src="/assets/coins/${f}" width="18" height="18" alt="" loading="lazy" decoding="async" />` : "";
+}
 
 // The whole market's top coins by market cap. Bitcoin + stablecoins are filtered
 // out in main() so the site tracks the top 100 "shitcoins" (everything but BTC).
@@ -171,7 +177,7 @@ function page({ title, description, canonical, jsonLd = "", main, script }) {
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/css/styles.css?v=3" />
+  <link rel="stylesheet" href="/css/styles.css?v=4" />
 ${jsonLd}${favicons()}
   <style>${SHELL_STYLE}
   </style>
@@ -204,7 +210,8 @@ function tickerLink(coin, pageSet) {
   const slug = pageSet.get(coin.symbol);
   const t = esc(coin.symbol);
   const col = brandColor(coin.symbol);
-  return slug ? `<a class="ticker-link" style="color:${col}" href="/coin/${slug}/">${t}</a>` : `<span class="ticker-link" style="color:${col}">${t}</span>`;
+  const ico = logoImg(coin);
+  return slug ? `${ico}<a class="ticker-link" style="color:${col}" href="/coin/${slug}/">${t}</a>` : `${ico}<span class="ticker-link" style="color:${col}">${t}</span>`;
 }
 function nameLink(coin, pageSet, cls = "company-link") {
   const slug = pageSet.get(coin.symbol);
@@ -342,6 +349,7 @@ function coinPage(c) {
   const brand = brandColor(c.symbol);
   const main = `    <section class="panel" data-coin-id="${esc(c.id)}" data-coin-symbol="${esc(c.symbol)}" data-brand="${brand}">
       <div class="coin-hero">
+        ${LOGOS[c.id] ? `<img class="coin-hero__ico" src="/assets/coins/${LOGOS[c.id]}" width="40" height="40" alt="${esc(c.symbol)} logo" decoding="async" />` : ""}
         <span class="coin-hero__sym" style="color:${brand}">${esc(c.symbol)}</span>
         <span class="coin-hero__name">${esc(c.name)}</span>
         ${chain ? `<span class="coin-hero__chain">${esc(chain)}</span>` : ""}
@@ -402,7 +410,7 @@ async function main() {
   }
   const seen = new Set();
   const coins = raw
-    .map((m) => ({ id: m.id, symbol: (m.symbol || "").toUpperCase(), name: m.name || "", price: m.current_price, change: m.price_change_percentage_24h, change7d: (m.price_change_percentage_7d_in_currency != null ? m.price_change_percentage_7d_in_currency : m.price_change_percentage_7d), marketCap: m.market_cap, volume: m.total_volume, rank: m.market_cap_rank }))
+    .map((m) => ({ id: m.id, symbol: (m.symbol || "").toUpperCase(), name: m.name || "", price: m.current_price, change: m.price_change_percentage_24h, change7d: (m.price_change_percentage_7d_in_currency != null ? m.price_change_percentage_7d_in_currency : m.price_change_percentage_7d), marketCap: m.market_cap, volume: m.total_volume, rank: m.market_cap_rank, image: m.image || "" }))
     .filter((c) => isFinite(c.marketCap) && c.marketCap > 0)
     .filter((c) => c.id !== "bitcoin" && !exclude.has(c.symbol))
     .sort((a, b) => b.marketCap - a.marketCap)
@@ -426,6 +434,7 @@ async function main() {
   // and we only hit CoinGecko for coins we've never seen. That takes a full run
   // from ~72 CoinGecko calls down to ~0-3 (just new top-100 entrants), which keeps
   // an automated cron comfortably inside CoinGecko's rate + monthly quota.
+  try { LOGOS = JSON.parse(await readFile(LOGOS_MAP, "utf8")) || {}; } catch {}
   let meta = {};
   try { meta = JSON.parse(await readFile(META_CACHE, "utf8")) || {}; } catch {}
   let fetched = 0;
@@ -508,6 +517,8 @@ async function main() {
   await mkdir(path.join(ROOT, "data"), { recursive: true });
   await writeFile(path.join(ROOT, "data", "coins-pages.json"), JSON.stringify(Object.fromEntries(pageSet)), "utf8");
   await writeFile(path.join(ROOT, "data", "exclude.json"), JSON.stringify([...exclude]), "utf8");
+  // Logo manifest for tools/fetch-logos.mjs (symbol -> id + source image URL).
+  await writeFile(path.join(ROOT, "data", "coin-logos.json"), JSON.stringify(coins.map((c) => ({ id: c.id, symbol: c.symbol, image: c.image }))), "utf8");
 
   // Daily Shitcoins Index history: append a snapshot every ~4h (rolling ~30 days).
   try {
