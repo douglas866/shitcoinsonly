@@ -17,8 +17,12 @@ const INDEX = path.join(ROOT, "index.html");
 const ORIGIN = "https://shitcoinsonly.com";
 const UA = { headers: { accept: "application/json", "user-agent": "ShitcoinsOnly build" } };
 
+// The whole market's top coins by market cap. Bitcoin + stablecoins are filtered
+// out in main() so the site tracks the top 100 "shitcoins" (everything but BTC).
 const MARKETS =
-  "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&category=meme-token&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h,7d";
+  "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=150&page=1&sparkline=false&price_change_percentage=24h,7d";
+const STABLECOINS =
+  "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&category=stablecoins&order=market_cap_desc&per_page=100&page=1&sparkline=false";
 
 // ---------- formatting ----------
 const fmtPctNum = (n) => `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
@@ -292,24 +296,23 @@ function exchangeNames(on) {
 }
 function coinParagraph(c) {
   const chain = chainLabel(c.platformId);
-  let lead = `${c.name} (${c.symbol}) is a memecoin`;
-  if (chain) lead += ` on ${chain}`;
+  let lead = chain ? `${c.name} (${c.symbol}) is a token on ${chain}` : `${c.name} (${c.symbol}) is a cryptocurrency`;
   if (c.year) lead += `, first recorded in ${c.year}`;
   lead += ".";
   const rank = c.rank
-    ? `It currently ranks #${c.rank} among meme-token cryptocurrencies by market capitalization`
-    : `It is tracked among the top meme-token cryptocurrencies by market capitalization`;
+    ? `It currently ranks #${c.rank} by market capitalization among all cryptocurrencies`
+    : `It is tracked among the largest cryptocurrencies by market capitalization`;
   return [
     lead,
     `${rank}, with a market capitalization of ${fmtBig(c.marketCap)} and 24-hour trading volume of ${fmtBig(c.volume)}.`,
     `It is listed on ${exchangeNames(c.on)}.`,
-    `Like all memecoins, ${c.symbol} is highly speculative and its price can be extremely volatile.`,
+    `As with any cryptocurrency other than Bitcoin, ${c.symbol} is speculative and its price can be highly volatile.`,
   ].join(" ");
 }
 function coinPage(c) {
   const chain = chainLabel(c.platformId);
   const canonical = `${ORIGIN}/coin/${c.id}/`;
-  const desc = `${c.name} (${c.symbol}) live price, market cap, 24h change and volume. Factual overview of the ${chain ? chain + " " : ""}memecoin, listed on ${exchangeNames(c.on)}.`;
+  const desc = `${c.name} (${c.symbol}) live price, market cap, 24h change and volume. Factual overview of the ${chain ? chain + " " : ""}cryptocurrency, listed on ${exchangeNames(c.on)}.`;
   const jsonLd = `  <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"${ORIGIN}/"},{"@type":"ListItem","position":2,"name":"Coins","item":"${ORIGIN}/market/"},{"@type":"ListItem","position":3,"name":"${esc(c.name)}"}]}
   </script>
@@ -343,10 +346,18 @@ function coinPage(c) {
 // ---------- main ----------
 async function main() {
   const raw = await (await fetch(MARKETS, UA)).json();
+  // Live stablecoin list (symbols) to exclude, plus Bitcoin (by id).
+  let stableSymbols = [];
+  try {
+    const st = await (await fetch(STABLECOINS, UA)).json();
+    stableSymbols = (Array.isArray(st) ? st : []).map((m) => (m.symbol || "").toUpperCase()).filter(Boolean);
+  } catch {}
+  const exclude = new Set(["BTC", ...stableSymbols]);
   const seen = new Set();
   const coins = raw
     .map((m) => ({ id: m.id, symbol: (m.symbol || "").toUpperCase(), name: m.name || "", price: m.current_price, change: m.price_change_percentage_24h, change7d: (m.price_change_percentage_7d_in_currency != null ? m.price_change_percentage_7d_in_currency : m.price_change_percentage_7d), marketCap: m.market_cap, volume: m.total_volume, rank: m.market_cap_rank }))
     .filter((c) => isFinite(c.marketCap) && c.marketCap > 0)
+    .filter((c) => c.id !== "bitcoin" && !exclude.has(c.symbol))
     .sort((a, b) => b.marketCap - a.marketCap)
     .filter((c) => (seen.has(c.symbol) ? false : (seen.add(c.symbol), true)))
     .slice(0, 100);
@@ -402,10 +413,10 @@ async function main() {
 
   // Section pages
   const sections = [
-    ["market", page({ title: "Top 100 Shitcoins by Market Cap | ShitcoinsOnly", description: "The top 100 shitcoins and memecoins ranked by market capitalization, with live price, 24h change and market cap.", canonical: `${ORIGIN}/market/`, main: marketPanel(marketRows(coins, pageSet)), script: `  <script src="/js/app.js" defer></script>` })],
+    ["market", page({ title: "Top 100 Shitcoins by Market Cap | ShitcoinsOnly", description: "The top 100 shitcoins ranked by market capitalization, with live price, 24h change and market cap.", canonical: `${ORIGIN}/market/`, main: marketPanel(marketRows(coins, pageSet)), script: `  <script src="/js/app.js" defer></script>` })],
     ["heatmap", page({ title: "Shitcoin Heatmap | ShitcoinsOnly", description: "Live treemap of the top shitcoins by market cap, colored by 24h price change.", canonical: `${ORIGIN}/heatmap/`, main: heatmapPanel(island), script: `  <script src="/js/app.js" defer></script>` })],
-    ["gainers", page({ title: "Top Shitcoin Gainers (24h) | ShitcoinsOnly", description: "The biggest 24-hour gainers among the top 100 shitcoins and memecoins.", canonical: `${ORIGIN}/gainers/`, main: moverPanel("gainers", "TOP GAINERS &middot; 24H", moverRows(gainers, pageSet)), script: `  <script src="/js/app.js" defer></script>` })],
-    ["losers", page({ title: "Top Shitcoin Losers (24h) | ShitcoinsOnly", description: "The biggest 24-hour losers among the top 100 shitcoins and memecoins.", canonical: `${ORIGIN}/losers/`, main: moverPanel("losers", "TOP LOSERS &middot; 24H", moverRows(losers, pageSet)), script: `  <script src="/js/app.js" defer></script>` })],
+    ["gainers", page({ title: "Top Shitcoin Gainers (24h) | ShitcoinsOnly", description: "The biggest 24-hour gainers among the top 100 shitcoins.", canonical: `${ORIGIN}/gainers/`, main: moverPanel("gainers", "TOP GAINERS &middot; 24H", moverRows(gainers, pageSet)), script: `  <script src="/js/app.js" defer></script>` })],
+    ["losers", page({ title: "Top Shitcoin Losers (24h) | ShitcoinsOnly", description: "The biggest 24-hour losers among the top 100 shitcoins.", canonical: `${ORIGIN}/losers/`, main: moverPanel("losers", "TOP LOSERS &middot; 24H", moverRows(losers, pageSet)), script: `  <script src="/js/app.js" defer></script>` })],
     ["volume", page({ title: "Highest Volume Shitcoins (24h) | ShitcoinsOnly", description: "The shitcoins with the highest 24-hour trading volume among the top 100 by market cap.", canonical: `${ORIGIN}/volume/`, main: volumePanel(volumeRows(volume, pageSet)), script: `  <script src="/js/app.js" defer></script>` })],
     ["index", page({ title: "Daily Shitcoins Index | ShitcoinsOnly", description: "A market-cap-weighted index of the top 100 shitcoins by 24h and 7d performance, snapshotted every 4 hours. Index 100 = flat.", canonical: `${ORIGIN}/index/`, main: indexPanel(w24, w7, coins.length, updatedStamp, nowIso) + "\n" + marketPanel(marketRows(coins, pageSet)), script: `  <script src="/js/app.js" defer></script>` })],
   ];
@@ -427,6 +438,7 @@ async function main() {
   // Client link map
   await mkdir(path.join(ROOT, "data"), { recursive: true });
   await writeFile(path.join(ROOT, "data", "coins-pages.json"), JSON.stringify(Object.fromEntries(pageSet)), "utf8");
+  await writeFile(path.join(ROOT, "data", "exclude.json"), JSON.stringify([...exclude]), "utf8");
 
   // Daily Shitcoins Index history: append a snapshot every ~4h (rolling ~30 days).
   try {

@@ -62,7 +62,11 @@ export async function onRequestGet(context) {
     upstream.searchParams.set("ids", ids.join(","));
     upstream.searchParams.set("per_page", String(ids.length));
   } else {
-    return json({ error: "need category or ids" }, 400, 0);
+    // General top-by-market-cap mode (the whole market; the client filters out
+    // Bitcoin + stablecoins and keeps the top 100 "shitcoins").
+    let perPage = parseInt(url.searchParams.get("per_page") || "150", 10);
+    if (!isFinite(perPage) || perPage < 1) perPage = 150;
+    upstream.searchParams.set("per_page", String(Math.min(perPage, MAX_PER_PAGE)));
   }
 
   try {

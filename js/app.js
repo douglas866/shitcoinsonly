@@ -9,9 +9,14 @@
 const PAGE_SIZE = 10;
 const MAX_PAGES = 10; // 10 pages x 10 = top 100
 
-const API_URL = "/api/prices?category=meme-token&per_page=100";
+// Universe = the whole market's top coins by market cap, MINUS Bitcoin and
+// stablecoins ("everything except Bitcoin is a shitcoin"). We pull ~150 and
+// filter down to the top 100 that survive. excludeSet is seeded here and topped
+// up from /data/exclude.json (the live stablecoin list, generated at build time).
+const API_URL = "/api/prices?per_page=150";
 const CG_FALLBACK =
-  "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&category=meme-token&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h";
+  "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=150&page=1&sparkline=false&price_change_percentage=24h,7d";
+let excludeSet = new Set(["BTC", "USDT", "USDC", "USDS", "DAI", "USDE", "FDUSD", "TUSD", "USDD", "PYUSD", "USD1", "BUSD", "GUSD", "FRAX", "LUSD", "USDP", "EURC", "USDG", "RLUSD", "USR", "USDX"]);
 const REFRESH_MS = 60_000;
 
 const fmtPctNum = (n) => `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
@@ -112,10 +117,12 @@ async function loadMarket() {
         volume: m.total_volume,
       }))
       .filter((c) => isFinite(c.marketCap) && c.marketCap > 0)
+      .filter((c) => c.id !== "bitcoin" && !excludeSet.has(c.symbol)) // no BTC, no stablecoins
       .sort((a, b) => b.marketCap - a.marketCap)
       // Dedupe by symbol (CoinGecko lists e.g. DOGE + Binance-Peg DOGE): keep
       // the highest-market-cap instance, which sort() already placed first.
-      .filter((c) => (seen.has(c.symbol) ? false : (seen.add(c.symbol), true)));
+      .filter((c) => (seen.has(c.symbol) ? false : (seen.add(c.symbol), true)))
+      .slice(0, 100);
     lastLoad = Date.now();
     renderMarket();
     renderMovers();
@@ -530,11 +537,13 @@ window.addEventListener("load", syncTopbarHeight);
 
 // Load the symbol->page-slug map first so the first render can already link
 // clickable coins, then fetch market data.
-fetch("/data/coins-pages.json", { cache: "no-store" })
-  .then((r) => (r.ok ? r.json() : {}))
-  .then((m) => { pageMap = m || {}; })
-  .catch(() => {})
-  .finally(loadMarket);
+Promise.all([
+  fetch("/data/coins-pages.json", { cache: "no-store" }).then((r) => (r.ok ? r.json() : {})).catch(() => ({})),
+  fetch("/data/exclude.json", { cache: "no-store" }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
+]).then(([pm, ex]) => {
+  pageMap = pm || {};
+  (ex || []).forEach((s) => excludeSet.add(String(s).toUpperCase()));
+}).finally(loadMarket);
 
 // Visibility-aware polling: never fetch while the tab is hidden, and refresh
 // immediately (if data is stale) when the tab comes back to the foreground.
