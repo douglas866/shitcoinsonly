@@ -69,9 +69,16 @@ export async function onRequestGet(context) {
     upstream.searchParams.set("per_page", String(Math.min(perPage, MAX_PER_PAGE)));
   }
 
+  // Optional CoinGecko Demo API key (set as a Pages env var CG_API_KEY). Public
+  // CoinGecko rate-limits Cloudflare's shared Worker IPs (429); a free Demo key
+  // lifts that so the edge cache actually serves data instead of falling through.
+  const headers = { accept: "application/json", "user-agent": UA };
+  const key = context.env && context.env.CG_API_KEY;
+  if (key) { headers["x-cg-demo-api-key"] = key; upstream.searchParams.set("x_cg_demo_api_key", key); }
+
   try {
     const res = await fetch(upstream.toString(), {
-      headers: { accept: "application/json", "user-agent": UA },
+      headers,
       cf: { cacheTtl: 60, cacheEverything: true },
     });
     if (!res.ok) return json({ error: "upstream", status: res.status }, 502, 0);
