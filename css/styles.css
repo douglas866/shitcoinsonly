@@ -3027,3 +3027,61 @@ html[lang="sv"] section#explorer .explorer-card--hero .explorer-card__row { gap:
 }
 .chart-filters__change.is-up { color: var(--up); }
 .chart-filters__change.is-down { color: var(--down); }
+
+/* ============================================================
+   ShitcoinsOnly — Gen-Z / TikTok modern skin (appended, appearance only)
+   No layout/structure/content changes — palette, glass, neon, radii.
+   ============================================================ */
+:root{
+  --bg:#0a0612; --bg-elev:#160e28; --bg-row:#1d1236;
+  --border:#2c1d4e; --border-strong:#3d2a6b;
+  --text:#f6f2ff; --text-dim:#cbbdf0; --text-faint:#9585c4;
+  --accent:#b06bff; --accent-soft:rgba(176,107,255,.16);
+  --up:#2ff3ad; --down:#ff4f8b;
+  --so-grad:linear-gradient(90deg,#b06bff,#ff5fb2 45%,#38e8ff);
+}
+@keyframes soHue{to{filter:hue-rotate(360deg)}}
+html{scroll-behavior:smooth}
+body{
+  background:
+    radial-gradient(1100px 640px at 12% -8%, rgba(176,107,255,.22), transparent 60%),
+    radial-gradient(900px 560px at 100% -5%, rgba(56,232,255,.14), transparent 55%),
+    radial-gradient(1000px 760px at 50% 118%, rgba(255,95,178,.18), transparent 60%),
+    #0a0612 !important;
+  background-attachment:fixed; -webkit-font-smoothing:antialiased;
+}
+::selection{background:rgba(176,107,255,.35);color:#fff}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:linear-gradient(#7a4fd0,#c94fb0);border-radius:20px}
+.topbar{background:rgba(16,10,32,.72)!important;backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);border-bottom:1px solid rgba(176,107,255,.25)!important}
+.brand__mark{background:var(--so-grad);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 10px rgba(176,107,255,.5))}
+.brand-link:hover .brand__mark{animation:soHue 6s linear infinite}
+.quote__value{color:#f6f2ff;font-weight:800}
+.quote__label{color:var(--accent);font-weight:700}
+.panel{background:linear-gradient(180deg,rgba(30,19,56,.66),rgba(18,11,34,.66))!important;border:1px solid rgba(176,107,255,.18)!important;border-radius:20px!important;box-shadow:0 10px 40px rgba(10,4,25,.5), inset 0 1px 0 rgba(255,255,255,.04);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);overflow:hidden;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.panel:hover{border-color:rgba(176,107,255,.4)!important;box-shadow:0 14px 50px rgba(120,50,200,.28)}
+.panel__head{border-bottom:1px solid rgba(176,107,255,.14)!important}
+.panel__title{font-weight:800;letter-spacing:.02em}
+.panel__title a,.panel-title-link{background:var(--so-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ticker{background:rgba(14,9,28,.6)!important;border-bottom:1px solid rgba(176,107,255,.18)!important}
+.data-table th{color:var(--text-faint)!important;text-transform:uppercase;letter-spacing:.08em;background:transparent!important;border-bottom:1px solid rgba(176,107,255,.16)!important}
+.data-table td{border-bottom:1px solid rgba(255,255,255,.05)!important}
+.data-table tbody tr{transition:background .14s ease}
+.data-table tbody tr:hover{background:rgba(176,107,255,.10)!important;box-shadow:inset 3px 0 0 var(--accent)}
+.ticker-link{font-weight:800}
+a.ticker-link{color:var(--accent)!important}
+a.ticker-link:hover{filter:drop-shadow(0 0 8px rgba(176,107,255,.6))}
+.num.up,td.up,.up{color:var(--up)!important;text-shadow:0 0 12px rgba(47,243,173,.35)}
+.num.down,td.down,.down{color:var(--down)!important;text-shadow:0 0 12px rgba(255,79,139,.30)}
+.pager__btn{border:1px solid rgba(176,107,255,.3)!important;border-radius:999px!important;color:var(--accent);transition:.15s}
+.pager__btn:hover:not(:disabled){background:var(--accent-soft);box-shadow:0 0 16px rgba(176,107,255,.4)}
+.pager__label{color:var(--text-dim);font-weight:700}
+.heatmap-canvas{background:#0a0612!important;border:1px solid rgba(176,107,255,.2)!important;border-radius:16px!important}
+.heatmap-cell{border-radius:6px!important}
+.heatmap-cell:hover{outline:2px solid #fff!important;box-shadow:0 0 20px rgba(176,107,255,.5)}
+.dsindex-value,.coin-hero__sym{background:var(--so-grad)!important;-webkit-background-clip:text!important;background-clip:text!important;color:transparent!important;filter:drop-shadow(0 0 18px rgba(176,107,255,.35))}
+.coin-hero__chain{border:1px solid rgba(176,107,255,.4)!important;color:var(--accent)!important;border-radius:999px!important;background:var(--accent-soft)}
+.coin-stats{border-radius:14px;overflow:hidden}
+.footer{border-top:1px solid rgba(176,107,255,.16)!important}
+.loading{color:var(--accent)!important}
+.table-wrap{border-radius:0 0 20px 20px}
