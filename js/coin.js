@@ -105,8 +105,12 @@
     if (!id) return;
     const empty = document.getElementById("coinChartEmpty");
     if (empty) { empty.textContent = "Loading chart…"; empty.style.display = ""; }
-    const url = "https://api.coingecko.com/api/v3/coins/" + encodeURIComponent(id) + "/market_chart?vs_currency=usd&days=" + days;
-    fetch(url, { cache: "no-store" }).then((r) => { if (!r.ok) throw 0; return r.json(); })
+    // Prefer our edge-cached proxy (protects CoinGecko's rate limit); fall back to
+    // CoinGecko directly only if the proxy is unavailable (e.g. local preview).
+    const proxy = "/api/chart?id=" + encodeURIComponent(id) + "&days=" + days;
+    const cg = "https://api.coingecko.com/api/v3/coins/" + encodeURIComponent(id) + "/market_chart?vs_currency=usd&days=" + days;
+    const get = (u) => fetch(u, { cache: "no-store" }).then((r) => { if (!r.ok) throw 0; return r.json(); });
+    get(proxy).catch(() => get(cg))
       .then((d) => drawChart(d && d.prices))
       .catch(() => { if (empty) { empty.textContent = "Chart unavailable"; empty.style.display = ""; } });
   }
