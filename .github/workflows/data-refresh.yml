@@ -65,5 +65,5 @@ jobs:
       - name: Deploy to Cloudflare Pages
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_ACCOUNT_ID: "5cd6658c5a02ec712fca962413760ede"
         run: npx --yes wrangler@latest pages deploy . --project-name shitcoinsonly --branch main --commit-dirty=true
