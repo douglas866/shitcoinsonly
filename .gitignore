@@ -6,5 +6,6 @@ Thumbs.db
 _pushtogithub.ps1
 tools/.portable-git/
 .local/
+.wrangler/
 
 _research_tmp/
