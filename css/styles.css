@@ -3117,3 +3117,8 @@ a.company-link:hover{color:#fff!important}
 .coin-ico{display:inline-block;width:18px;height:18px;vertical-align:middle;margin:-2px 7px 0 0;border-radius:5px;object-fit:contain;background:transparent}
 .coin-hero__ico{width:40px;height:40px;border-radius:9px;object-fit:contain;vertical-align:middle;margin-right:6px;filter:drop-shadow(0 2px 10px rgba(0,0,0,.45))}
 .ticker-cell{white-space:nowrap}
+
+/* ---- all-time records table ---- */
+.rec-cell{line-height:1.2}
+.rec-date{display:block;font-size:10.5px;color:var(--text-faint);font-weight:600;letter-spacing:.02em;margin-top:3px;font-variant-numeric:tabular-nums}
+#recordsTable td.up,#recordsTable td.down{font-weight:800}

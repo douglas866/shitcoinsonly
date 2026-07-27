@@ -132,7 +132,7 @@ function topbar() {
 }
 function ticker() {
   const links = [
-    ["/market/", "TOP 100 SHITCOINS"], ["/index/", "DAILY SHITCOINS INDEX"], ["/heatmap/", "LIVE HEATMAP"], ["/gainers/", "TOP GAINERS 24H"],
+    ["/market/", "TOP 100 SHITCOINS"], ["/index/", "DAILY SHITCOINS INDEX"], ["/records/", "ALL-TIME RECORDS"], ["/heatmap/", "LIVE HEATMAP"], ["/gainers/", "TOP GAINERS 24H"],
     ["/losers/", "TOP LOSERS 24H"], ["/volume/", "HIGHEST VOLUME"], ["/#bestweek", "BEST OF THE WEEK"], ["/market/", "RANKED BY MARKET CAP"],
   ];
   const a = links.map(([h, t]) => `<a href="${h}">${t}</a>`).join("");
@@ -177,7 +177,7 @@ function page({ title, description, canonical, jsonLd = "", main, script }) {
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/css/styles.css?v=4" />
+  <link rel="stylesheet" href="/css/styles.css?v=5" />
 ${jsonLd}${favicons()}
   <style>${SHELL_STYLE}
   </style>
@@ -237,6 +237,36 @@ function bestWeekRows(list, pageSet) {
   return list
     .map((c, i) => `<tr><td class="num rank">${i + 1}</td><td class="ticker-cell">${tickerLink(c, pageSet)}</td>${pctCell(c.change7d)}<td class="num">${fmtPrice(c.price)}</td></tr>`)
     .join("");
+}
+// ---- all-time records (max gain ATL->ATH, max drop ATH->ATL) ----
+function fmtDate(iso) {
+  if (!iso) return "";
+  const s = String(iso).slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : "";
+}
+function fmtPctBig(n) {
+  if (n == null || !isFinite(n)) return "—";
+  const sign = n >= 0 ? "+" : "−";
+  const a = Math.abs(n);
+  if (a >= 1000) return sign + Math.round(a).toLocaleString("en-US") + "%";
+  if (a >= 99 && a < 100) return sign + (Math.floor(a * 100) / 100).toFixed(2) + "%"; // never round up to 100
+  return sign + a.toFixed(1) + "%";
+}
+function maxGainPct(c) { return isFinite(c.ath) && isFinite(c.atl) && c.atl > 0 ? (c.ath / c.atl - 1) * 100 : null; }
+function maxDropPct(c) { return isFinite(c.ath) && isFinite(c.atl) && c.ath > 0 ? (c.atl / c.ath - 1) * 100 : null; }
+function recordsRows(list, pageSet) {
+  return list
+    .map((c, i) => `<tr><td class="num rank">${i + 1}</td><td class="ticker-cell">${tickerLink(c, pageSet)}</td>` +
+      `<td class="num rec-cell">${fmtPrice(c.ath)}<span class="rec-date">${fmtDate(c.athDate) || "&mdash;"}</span></td>` +
+      `<td class="num rec-cell">${fmtPrice(c.atl)}<span class="rec-date">${fmtDate(c.atlDate) || "&mdash;"}</span></td>` +
+      `<td class="num up">${fmtPctBig(maxGainPct(c))}</td>` +
+      `<td class="num down">${fmtPctBig(maxDropPct(c))}</td></tr>`)
+    .join("");
+}
+function recordsPanel(rows) {
+  return `    <section id="records" class="panel"><header class="panel__head"><h2 class="panel__title">ALL-TIME RECORDS</h2></header>
+      <div class="coin-body" style="padding-bottom:6px"><p>Every shitcoin's all-time high and all-time low (with the date each was set), the maximum gain from its lowest price ever up to its highest ever, and the maximum drop measured from its all-time high down to its all-time low. Not investment advice.</p></div>
+      <div class="table-wrap"><table class="data-table" id="recordsTable"><thead><tr><th class="num">#</th><th>COIN</th><th class="num">ALL-TIME HIGH</th><th class="num">ALL-TIME LOW</th><th class="num">MAX GAIN</th><th class="num">MAX DROP</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
 }
 function weightedChange(coins, field) {
   // Winsorize each coin's period change to +/-90% so new-listing glitches
@@ -410,7 +440,7 @@ async function main() {
   }
   const seen = new Set();
   const coins = raw
-    .map((m) => ({ id: m.id, symbol: (m.symbol || "").toUpperCase(), name: m.name || "", price: m.current_price, change: m.price_change_percentage_24h, change7d: (m.price_change_percentage_7d_in_currency != null ? m.price_change_percentage_7d_in_currency : m.price_change_percentage_7d), marketCap: m.market_cap, volume: m.total_volume, rank: m.market_cap_rank, image: m.image || "" }))
+    .map((m) => ({ id: m.id, symbol: (m.symbol || "").toUpperCase(), name: m.name || "", price: m.current_price, change: m.price_change_percentage_24h, change7d: (m.price_change_percentage_7d_in_currency != null ? m.price_change_percentage_7d_in_currency : m.price_change_percentage_7d), marketCap: m.market_cap, volume: m.total_volume, rank: m.market_cap_rank, image: m.image || "", ath: m.ath, athDate: m.ath_date, atl: m.atl, atlDate: m.atl_date }))
     .filter((c) => isFinite(c.marketCap) && c.marketCap > 0)
     .filter((c) => c.id !== "bitcoin" && !exclude.has(c.symbol))
     .sort((a, b) => b.marketCap - a.marketCap)
@@ -497,6 +527,7 @@ async function main() {
     ["losers", page({ title: "Top Shitcoin Losers (24h) | ShitcoinsOnly", description: "Every one of the top 100 shitcoins ranked by 24-hour loss, worst to best.", canonical: `${ORIGIN}/losers/`, main: moverPanel("losers", "TOP LOSERS &middot; 24H", moverRows(losersFull, pageSet)), script: `  <script src="/js/app.js" defer></script>` })],
     ["volume", page({ title: "Highest Volume Shitcoins (24h) | ShitcoinsOnly", description: "All top 100 shitcoins ranked by 24-hour trading volume.", canonical: `${ORIGIN}/volume/`, main: volumePanel(volumeRows(volumeFull, pageSet)), script: `  <script src="/js/app.js" defer></script>` })],
     ["index", page({ title: "Daily Shitcoins Index | ShitcoinsOnly", description: "A market-cap-weighted index of the top 100 shitcoins by 24h and 7d performance, snapshotted every 4 hours. Index 100 = flat.", canonical: `${ORIGIN}/index/`, main: indexPanel(w24, w7, coins.length, updatedStamp, nowIso) + "\n" + marketPanel(marketRows(coins, pageSet)), script: `  <script src="/js/app.js" defer></script>` })],
+    ["records", page({ title: "All-Time Records: Max Gain & Max Drop | ShitcoinsOnly", description: "Every top-100 shitcoin's all-time high and all-time low with dates, plus the maximum gain (ATL to ATH) and maximum drop (ATH to ATL).", canonical: `${ORIGIN}/records/`, main: recordsPanel(recordsRows(coins, pageSet)), script: `  <script src="/js/app.js" defer></script>` })],
   ];
   for (const [slug, out] of sections) {
     const dir = path.join(ROOT, slug);
@@ -535,7 +566,7 @@ async function main() {
   } catch {}
 
   // Sitemap
-  const urls = [`${ORIGIN}/`, `${ORIGIN}/market/`, `${ORIGIN}/index/`, `${ORIGIN}/heatmap/`, `${ORIGIN}/gainers/`, `${ORIGIN}/losers/`, `${ORIGIN}/volume/`, ...eligible.map((c) => `${ORIGIN}/coin/${c.id}/`)];
+  const urls = [`${ORIGIN}/`, `${ORIGIN}/market/`, `${ORIGIN}/index/`, `${ORIGIN}/records/`, `${ORIGIN}/heatmap/`, `${ORIGIN}/gainers/`, `${ORIGIN}/losers/`, `${ORIGIN}/volume/`, ...eligible.map((c) => `${ORIGIN}/coin/${c.id}/`)];
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${u}</loc><changefreq>hourly</changefreq></url>`).join("\n")}\n</urlset>\n`;
   await writeFile(path.join(ROOT, "sitemap.xml"), sitemap, "utf8");
 
