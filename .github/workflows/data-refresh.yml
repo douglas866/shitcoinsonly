@@ -41,10 +41,14 @@ jobs:
         with:
           node-version: 22
 
-      - name: Rebuild snapshot
+      - name: Rebuild snapshot + refresh logos
         env:
           CG_API_KEY: ${{ secrets.CG_API_KEY }}
-        run: node tools/build.mjs
+        run: |
+          node tools/build.mjs          # writes data/coin-logos.json manifest
+          node tools/fetch-logos.mjs     # incremental: only NEW top-100 entrants
+          node tools/logos-cleanup.mjs   # drop logos for coins that fell out
+          node tools/build.mjs           # rebuild so SSR includes any new icons
 
       - name: Commit if changed
         run: |
