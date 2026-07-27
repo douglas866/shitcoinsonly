@@ -3122,3 +3122,14 @@ a.company-link:hover{color:#fff!important}
 .rec-cell{line-height:1.2}
 .rec-date{display:block;font-size:10.5px;color:var(--text-faint);font-weight:600;letter-spacing:.02em;margin-top:3px;font-variant-numeric:tabular-nums}
 #recordsTable td.up,#recordsTable td.down{font-weight:800}
+
+/* ---- fix: rank column left gap (numbers were right-aligned in an equal-width
+   fixed column on mobile, leaving a void to the left) ---- */
+.data-table td.rank,.data-table th:first-child{text-align:left}
+@media (max-width:720px){
+  .data-table th:first-child,.data-table td:first-child{width:30px;padding-left:12px}
+  /* keep wide tables (records = 6 cols) readable, scroll rather than crush */
+  #recordsTable,#volumeTable{table-layout:auto;min-width:100%}
+  #recordsTable .rec-date{font-size:9.5px}
+  #records .table-wrap,#volume .table-wrap{overflow-x:auto}
+}

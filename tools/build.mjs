@@ -177,7 +177,7 @@ function page({ title, description, canonical, jsonLd = "", main, script }) {
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/css/styles.css?v=5" />
+  <link rel="stylesheet" href="/css/styles.css?v=6" />
 ${jsonLd}${favicons()}
   <style>${SHELL_STYLE}
   </style>
@@ -299,14 +299,10 @@ function heatmapPanel(island) {
     </section>`;
 }
 function marketPanel(rows) {
+  // Used only on the dedicated /market/ and /index/ pages, which list ALL 100
+  // (no pager — the homepage panel keeps its own pagination).
   return `    <section id="market" class="panel">
-      <header class="panel__head"><h2 class="panel__title">TOP 100 SHITCOINS</h2>
-        <div class="pager" aria-label="Market pagination">
-          <button type="button" class="pager__btn" id="pagerPrev" aria-label="Previous 10" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
-          <span class="pager__label" id="pagerLabel">&mdash;</span>
-          <button type="button" class="pager__btn" id="pagerNext" aria-label="Next 10"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
-        </div>
-      </header>
+      <header class="panel__head"><h2 class="panel__title">TOP 100 SHITCOINS</h2></header>
       <div class="table-wrap"><table class="data-table" id="marketTable"><thead><tr><th class="num">#</th><th>COIN</th><th class="col-name">NAME</th><th class="num col-price">PRICE</th><th class="num">24H</th><th class="num">MARKET CAP</th></tr></thead><tbody>${rows}</tbody></table></div>
     </section>`;
 }

@@ -204,13 +204,7 @@ function renderMarket() {
     tbody.innerHTML = `<tr><td colspan="6" class="loading">NO DATA</td></tr>`;
     return;
   }
-  const p = paginate(marketCache.length, marketPage);
-  marketPage = p.page;
-  tbody.innerHTML = marketCache
-    .slice(p.start, p.end)
-    .map((c, i) => {
-      const rank = p.start + i + 1;
-      return `
+  const rowHtml = (c, rank) => `
         <tr data-rank="${rank}" data-symbol="${esc(c.symbol)}">
           <td class="num rank">${rank}</td>
           <td class="ticker-cell">${tickerCellHtml(c)}</td>
@@ -219,7 +213,20 @@ function renderMarket() {
           ${pctCell(c.change)}
           <td class="num">${fmtBig(c.marketCap)}</td>
         </tr>`;
-    })
+  // Dedicated /market/ and /index/ pages list ALL 100 (no 10-at-a-time pager);
+  // the homepage panel stays paginated.
+  const showAll = /\/(market|index)\//.test(location.pathname);
+  if (showAll) {
+    tbody.innerHTML = marketCache.map((c, i) => rowHtml(c, i + 1)).join("");
+    const pager = document.getElementById("pager") || document.querySelector("#market .pager");
+    if (pager) pager.style.display = "none";
+    return;
+  }
+  const p = paginate(marketCache.length, marketPage);
+  marketPage = p.page;
+  tbody.innerHTML = marketCache
+    .slice(p.start, p.end)
+    .map((c, i) => rowHtml(c, p.start + i + 1))
     .join("");
   updatePagerControls("pager", p.page, p.cap, p.maxPage, p.start, p.end);
 }
