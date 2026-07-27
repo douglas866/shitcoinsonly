@@ -18,7 +18,7 @@ const ORIGIN = "https://shitcoinsonly.com";
 const UA = { headers: { accept: "application/json", "user-agent": "ShitcoinsOnly build" } };
 
 const MARKETS =
-  "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&category=meme-token&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h";
+  "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&category=meme-token&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h,7d";
 
 // ---------- formatting ----------
 const fmtPctNum = (n) => `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
@@ -85,7 +85,14 @@ const SHELL_STYLE = `
     @media (max-width:720px){.coin-stats{grid-template-columns:repeat(2,1fr)}}
     .coin-body{padding:18px 16px;color:#cfcfcf;line-height:1.7;font-size:15.5px;max-width:70ch}
     .coin-back{display:inline-block;margin:8px 16px 24px;color:#ff7a00;font-size:13px;letter-spacing:.04em;text-transform:uppercase;text-decoration:none}
-    .coin-back:hover{text-decoration:underline}`;
+    .coin-back:hover{text-decoration:underline}
+    .up{color:var(--up)} .down{color:var(--down)}
+    .dsindex-hero{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-end;padding:20px 16px 6px}
+    .dsindex-value{font:800 clamp(48px,8vw,92px)/1 Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:#f2f2f2;margin:6px 0 4px}
+    .dsindex-delta{font-size:22px;font-weight:700}
+    .dsindex-side{display:flex;gap:1px;background:#1f1f1f;border:1px solid #1f1f1f}
+    .dsindex-side .coin-stat{min-width:150px}
+    @media (max-width:560px){.dsindex-side{flex-direction:column}}`;
 
 function favicons() {
   return `  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
@@ -103,8 +110,8 @@ function topbar() {
 }
 function ticker() {
   const links = [
-    ["/market/", "TOP 100 SHITCOINS"], ["/heatmap/", "LIVE HEATMAP"], ["/gainers/", "TOP GAINERS 24H"],
-    ["/losers/", "TOP LOSERS 24H"], ["/volume/", "HIGHEST VOLUME"], ["/market/", "RANKED BY MARKET CAP"], ["/market/", "MEMECOINS ONLY"],
+    ["/market/", "TOP 100 SHITCOINS"], ["/index/", "DAILY SHITCOINS INDEX"], ["/heatmap/", "LIVE HEATMAP"], ["/gainers/", "TOP GAINERS 24H"],
+    ["/losers/", "TOP LOSERS 24H"], ["/volume/", "HIGHEST VOLUME"], ["/#bestweek", "BEST OF THE WEEK"], ["/market/", "RANKED BY MARKET CAP"],
   ];
   const a = links.map(([h, t]) => `<a href="${h}">${t}</a>`).join("");
   return `  <section class="ticker" aria-label="Section navigator">
@@ -193,6 +200,18 @@ function volumeRows(list, pageSet) {
     .map((c, i) => `<tr><td class="num rank">${i + 1}</td><td class="ticker-cell">${tickerLink(c, pageSet)}</td><td class="company-cell col-name">${nameLink(c, pageSet)}</td><td class="num">${fmtBig(c.volume)}</td><td class="num">${fmtBig(c.marketCap)}</td></tr>`)
     .join("");
 }
+function bestWeekRows(list, pageSet) {
+  return list
+    .map((c, i) => `<tr><td class="num rank">${i + 1}</td><td class="ticker-cell">${tickerLink(c, pageSet)}</td>${pctCell(c.change7d)}<td class="num">${fmtPrice(c.price)}</td></tr>`)
+    .join("");
+}
+function weightedChange(coins, field) {
+  // Winsorize each coin's period change to +/-90% so new-listing glitches
+  // (e.g. +56000% over 7d) can't dominate the index.
+  let total = 0, weighted = 0;
+  for (const c of coins) if (isFinite(c.marketCap) && c.marketCap > 0 && isFinite(c[field])) { total += c.marketCap; weighted += c.marketCap * Math.max(-90, Math.min(90, c[field])); }
+  return total > 0 ? weighted / total : null;
+}
 function heatmapIsland(coins) {
   const maxCap = coins.reduce((m, c) => Math.max(m, c.marketCap || 0), 0);
   const off = Math.sqrt(Math.max(1, maxCap)) * 0.14;
@@ -235,6 +254,26 @@ function moverPanel(id, title, rows) {
 function volumePanel(rows) {
   return `    <section id="volume" class="panel"><header class="panel__head"><h2 class="panel__title">HIGHEST VOLUME &middot; 24H</h2></header>
       <div class="table-wrap"><table class="data-table" id="volumeTable"><thead><tr><th class="num">#</th><th>COIN</th><th class="col-name">NAME</th><th class="num">24H VOLUME</th><th class="num">MARKET CAP</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
+}
+function bestWeekPanel(rows) {
+  return `    <section id="bestweek" class="panel"><header class="panel__head"><h2 class="panel__title">BEST PERFORMING SHITCOINS OF THE WEEK</h2></header>
+      <div class="table-wrap"><table class="data-table" id="bestWeekTable"><thead><tr><th class="num">#</th><th>COIN</th><th class="num">7D</th><th class="num">PRICE</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
+}
+function indexPanel(w24, w7, count, stamp, iso) {
+  const lvl = (w) => (w != null ? (100 * (1 + w / 100)).toFixed(2) : "—");
+  const pct = (w) => (w != null ? `${w >= 0 ? "+" : ""}${w.toFixed(2)}%` : "—");
+  const cls = (w) => (w == null ? "" : w >= 0 ? "up" : "down");
+  return `    <section id="dsindex" class="panel">
+      <header class="panel__head"><h2 class="panel__title">DAILY SHITCOINS INDEX</h2><time id="indexUpdated" class="heatmap-meta" datetime="${iso}">${stamp}</time></header>
+      <div class="dsindex-hero">
+        <div class="dsindex-main"><p class="coin-stat__label">Index level (24h)</p><p class="dsindex-value" id="indexValue">${lvl(w24)}</p><p class="dsindex-delta ${cls(w24)}" id="indexChange">${pct(w24)}</p></div>
+        <div class="dsindex-side">
+          <div class="coin-stat"><p class="coin-stat__label">7-day index</p><p class="coin-stat__value" id="index7dValue">${lvl(w7)}</p><p class="num ${cls(w7)}" id="index7dChange">${pct(w7)}</p></div>
+          <div class="coin-stat"><p class="coin-stat__label">Constituents</p><p class="coin-stat__value"><span id="indexCount">${count}</span> shitcoins</p></div>
+        </div>
+      </div>
+      <div class="coin-body"><p>The Daily Shitcoins Index is a market-cap-weighted measure of the top ${count} shitcoins by market capitalization. An index level of 100 means the pack is flat over the period; the 24-hour figure weights each coin's 24h price change by its market cap, and the 7-day figure does the same over seven days. It recomputes continuously from live data and is snapshotted every 4 hours. Not investment advice.</p></div>
+    </section>`;
 }
 
 // ---------- factual per-coin copy (self-authored from structured facts) ----------
@@ -306,7 +345,7 @@ async function main() {
   const raw = await (await fetch(MARKETS, UA)).json();
   const seen = new Set();
   const coins = raw
-    .map((m) => ({ id: m.id, symbol: (m.symbol || "").toUpperCase(), name: m.name || "", price: m.current_price, change: m.price_change_percentage_24h, marketCap: m.market_cap, volume: m.total_volume, rank: m.market_cap_rank }))
+    .map((m) => ({ id: m.id, symbol: (m.symbol || "").toUpperCase(), name: m.name || "", price: m.current_price, change: m.price_change_percentage_24h, change7d: (m.price_change_percentage_7d_in_currency != null ? m.price_change_percentage_7d_in_currency : m.price_change_percentage_7d), marketCap: m.market_cap, volume: m.total_volume, rank: m.market_cap_rank }))
     .filter((c) => isFinite(c.marketCap) && c.marketCap > 0)
     .sort((a, b) => b.marketCap - a.marketCap)
     .filter((c) => (seen.has(c.symbol) ? false : (seen.add(c.symbol), true)))
@@ -338,10 +377,13 @@ async function main() {
   const pageSet = new Map(eligible.map((c) => [c.symbol, c.id]));
 
   // Homepage SSR
-  const movers = coins.filter((c) => isFinite(c.change));
+  const movers = coins.filter((c) => isFinite(c.change) && Math.abs(c.change) <= 900);
   const gainers = [...movers].sort((a, b) => b.change - a.change).slice(0, 10);
   const losers = [...movers].sort((a, b) => a.change - b.change).slice(0, 10);
   const volume = [...coins].filter((c) => isFinite(c.volume) && c.volume > 0).sort((a, b) => b.volume - a.volume).slice(0, 10);
+  const bestWeek = coins.filter((c) => isFinite(c.change7d) && Math.abs(c.change7d) <= 1500).sort((a, b) => b.change7d - a.change7d).slice(0, 10);
+  const w24 = weightedChange(coins, "change");
+  const w7 = weightedChange(coins, "change7d");
   const island = heatmapIsland(coins);
   const etParts = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(new Date());
   const et = {}; etParts.forEach((p) => (et[p.type] = p.value));
@@ -353,6 +395,7 @@ async function main() {
   html = replaceBetween(html, "<!--SSR_GAINERS_START-->", "<!--SSR_GAINERS_END-->", moverRows(gainers, pageSet));
   html = replaceBetween(html, "<!--SSR_LOSERS_START-->", "<!--SSR_LOSERS_END-->", moverRows(losers, pageSet));
   html = replaceBetween(html, "<!--SSR_VOLUME_START-->", "<!--SSR_VOLUME_END-->", volumeRows(volume, pageSet));
+  html = replaceBetween(html, "<!--SSR_BESTWEEK_START-->", "<!--SSR_BESTWEEK_END-->", bestWeekRows(bestWeek, pageSet));
   html = replaceBetween(html, "<!--SSR_HEATMAP_START-->", "<!--SSR_HEATMAP_END-->", island);
   html = html.replace(/<time id="heatmapUpdated"[^>]*>[^<]*<\/time>/, `<time id="heatmapUpdated" class="heatmap-meta" datetime="${nowIso}">${updatedStamp}</time>`);
   await writeFile(INDEX, html, "utf8");
@@ -364,6 +407,7 @@ async function main() {
     ["gainers", page({ title: "Top Shitcoin Gainers (24h) | ShitcoinsOnly", description: "The biggest 24-hour gainers among the top 100 shitcoins and memecoins.", canonical: `${ORIGIN}/gainers/`, main: moverPanel("gainers", "TOP GAINERS &middot; 24H", moverRows(gainers, pageSet)), script: `  <script src="/js/app.js" defer></script>` })],
     ["losers", page({ title: "Top Shitcoin Losers (24h) | ShitcoinsOnly", description: "The biggest 24-hour losers among the top 100 shitcoins and memecoins.", canonical: `${ORIGIN}/losers/`, main: moverPanel("losers", "TOP LOSERS &middot; 24H", moverRows(losers, pageSet)), script: `  <script src="/js/app.js" defer></script>` })],
     ["volume", page({ title: "Highest Volume Shitcoins (24h) | ShitcoinsOnly", description: "The shitcoins with the highest 24-hour trading volume among the top 100 by market cap.", canonical: `${ORIGIN}/volume/`, main: volumePanel(volumeRows(volume, pageSet)), script: `  <script src="/js/app.js" defer></script>` })],
+    ["index", page({ title: "Daily Shitcoins Index | ShitcoinsOnly", description: "A market-cap-weighted index of the top 100 shitcoins by 24h and 7d performance, snapshotted every 4 hours. Index 100 = flat.", canonical: `${ORIGIN}/index/`, main: indexPanel(w24, w7, coins.length, updatedStamp, nowIso) + "\n" + marketPanel(marketRows(coins, pageSet)), script: `  <script src="/js/app.js" defer></script>` })],
   ];
   for (const [slug, out] of sections) {
     const dir = path.join(ROOT, slug);
@@ -384,8 +428,22 @@ async function main() {
   await mkdir(path.join(ROOT, "data"), { recursive: true });
   await writeFile(path.join(ROOT, "data", "coins-pages.json"), JSON.stringify(Object.fromEntries(pageSet)), "utf8");
 
+  // Daily Shitcoins Index history: append a snapshot every ~4h (rolling ~30 days).
+  try {
+    const histPath = path.join(ROOT, "data", "index-history.json");
+    let hist = [];
+    try { hist = JSON.parse(await readFile(histPath, "utf8")); } catch {}
+    const lvl = w24 != null ? +(100 * (1 + w24 / 100)).toFixed(2) : null;
+    const last = hist[hist.length - 1];
+    if (lvl != null && (!last || Date.parse(nowIso) - Date.parse(last.t) >= 4 * 3600 * 1000)) {
+      hist.push({ t: nowIso, v: lvl });
+      hist = hist.slice(-180);
+      await writeFile(histPath, JSON.stringify(hist), "utf8");
+    }
+  } catch {}
+
   // Sitemap
-  const urls = [`${ORIGIN}/`, `${ORIGIN}/market/`, `${ORIGIN}/heatmap/`, `${ORIGIN}/gainers/`, `${ORIGIN}/losers/`, `${ORIGIN}/volume/`, ...eligible.map((c) => `${ORIGIN}/coin/${c.id}/`)];
+  const urls = [`${ORIGIN}/`, `${ORIGIN}/market/`, `${ORIGIN}/index/`, `${ORIGIN}/heatmap/`, `${ORIGIN}/gainers/`, `${ORIGIN}/losers/`, `${ORIGIN}/volume/`, ...eligible.map((c) => `${ORIGIN}/coin/${c.id}/`)];
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${u}</loc><changefreq>hourly</changefreq></url>`).join("\n")}\n</urlset>\n`;
   await writeFile(path.join(ROOT, "sitemap.xml"), sitemap, "utf8");
 

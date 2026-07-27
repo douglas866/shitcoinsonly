@@ -3,27 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="The top 100 shitcoins and memecoins ranked by market capitalization, with live price, 24h change and market cap." />
+  <meta name="description" content="A market-cap-weighted index of the top 100 shitcoins by 24h and 7d performance, snapshotted every 4 hours. Index 100 = flat." />
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
   <meta name="theme-color" content="#0a0a0a" />
   <meta name="color-scheme" content="dark" />
-  <link rel="canonical" href="https://shitcoinsonly.com/market/" />
+  <link rel="canonical" href="https://shitcoinsonly.com/index/" />
   <link rel="manifest" href="/manifest.json" />
   <link rel="dns-prefetch" href="https://api.coingecko.com" />
   <link rel="preconnect" href="https://api.coingecko.com" crossorigin />
-  <title>Top 100 Shitcoins by Market Cap | ShitcoinsOnly</title>
-  <meta property="og:title" content="Top 100 Shitcoins by Market Cap | ShitcoinsOnly" />
-  <meta property="og:description" content="The top 100 shitcoins and memecoins ranked by market capitalization, with live price, 24h change and market cap." />
+  <title>Daily Shitcoins Index | ShitcoinsOnly</title>
+  <meta property="og:title" content="Daily Shitcoins Index | ShitcoinsOnly" />
+  <meta property="og:description" content="A market-cap-weighted index of the top 100 shitcoins by 24h and 7d performance, snapshotted every 4 hours. Index 100 = flat." />
   <meta property="og:image" content="https://shitcoinsonly.com/assets/og-image.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:type" content="image/png" />
-  <meta property="og:url" content="https://shitcoinsonly.com/market/" />
+  <meta property="og:url" content="https://shitcoinsonly.com/index/" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="ShitcoinsOnly" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Top 100 Shitcoins by Market Cap | ShitcoinsOnly" />
-  <meta name="twitter:description" content="The top 100 shitcoins and memecoins ranked by market capitalization, with live price, 24h change and market cap." />
+  <meta name="twitter:title" content="Daily Shitcoins Index | ShitcoinsOnly" />
+  <meta name="twitter:description" content="A market-cap-weighted index of the top 100 shitcoins by 24h and 7d performance, snapshotted every 4 hours. Index 100 = flat." />
   <meta name="twitter:image" content="https://shitcoinsonly.com/assets/og-image.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -81,7 +81,7 @@
   </style>
 </head>
 <body>
-  <h1 class="sr-only">Top 100 Shitcoins by Market Cap | ShitcoinsOnly</h1>
+  <h1 class="sr-only">Daily Shitcoins Index | ShitcoinsOnly</h1>
   <header class="topbar">
     <div class="topbar__brand">
       <a href="/" class="brand-link" aria-label="ShitcoinsOnly home"><span class="brand__name">SHITCOINS</span><span class="brand__mark">ONLY</span></a>
@@ -92,6 +92,17 @@
     <div class="topbar__carousel" aria-label="Section navigator"><div class="topbar__carousel-track"><a href="/market/">TOP 100 SHITCOINS</a><a href="/index/">DAILY SHITCOINS INDEX</a><a href="/heatmap/">LIVE HEATMAP</a><a href="/gainers/">TOP GAINERS 24H</a><a href="/losers/">TOP LOSERS 24H</a><a href="/volume/">HIGHEST VOLUME</a><a href="/#bestweek">BEST OF THE WEEK</a><a href="/market/">RANKED BY MARKET CAP</a><a href="/market/">TOP 100 SHITCOINS</a><a href="/index/">DAILY SHITCOINS INDEX</a><a href="/heatmap/">LIVE HEATMAP</a><a href="/gainers/">TOP GAINERS 24H</a><a href="/losers/">TOP LOSERS 24H</a><a href="/volume/">HIGHEST VOLUME</a><a href="/#bestweek">BEST OF THE WEEK</a><a href="/market/">RANKED BY MARKET CAP</a></div></div>
   </section>
   <main class="layout">
+    <section id="dsindex" class="panel">
+      <header class="panel__head"><h2 class="panel__title">DAILY SHITCOINS INDEX</h2><time id="indexUpdated" class="heatmap-meta" datetime="2026-07-27T01:53:54.078Z">2026-07-26 21:53 ET</time></header>
+      <div class="dsindex-hero">
+        <div class="dsindex-main"><p class="coin-stat__label">Index level (24h)</p><p class="dsindex-value" id="indexValue">103.26</p><p class="dsindex-delta up" id="indexChange">+3.26%</p></div>
+        <div class="dsindex-side">
+          <div class="coin-stat"><p class="coin-stat__label">7-day index</p><p class="coin-stat__value" id="index7dValue">104.52</p><p class="num up" id="index7dChange">+4.52%</p></div>
+          <div class="coin-stat"><p class="coin-stat__label">Constituents</p><p class="coin-stat__value"><span id="indexCount">98</span> shitcoins</p></div>
+        </div>
+      </div>
+      <div class="coin-body"><p>The Daily Shitcoins Index is a market-cap-weighted measure of the top 98 shitcoins by market capitalization. An index level of 100 means the pack is flat over the period; the 24-hour figure weights each coin's 24h price change by its market cap, and the 7-day figure does the same over seven days. It recomputes continuously from live data and is snapshotted every 4 hours. Not investment advice.</p></div>
+    </section>
     <section id="market" class="panel">
       <header class="panel__head"><h2 class="panel__title">TOP 100 SHITCOINS</h2>
         <div class="pager" aria-label="Market pagination">

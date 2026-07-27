@@ -51,7 +51,7 @@ export async function onRequestGet(context) {
   upstream.searchParams.set("order", "market_cap_desc");
   upstream.searchParams.set("page", "1");
   upstream.searchParams.set("sparkline", "false");
-  upstream.searchParams.set("price_change_percentage", "24h");
+  upstream.searchParams.set("price_change_percentage", "24h,7d");
 
   if (/^[a-z0-9-]+$/.test(category)) {
     upstream.searchParams.set("category", category);

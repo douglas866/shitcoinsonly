@@ -74,6 +74,13 @@
     .coin-body{padding:18px 16px;color:#cfcfcf;line-height:1.7;font-size:15.5px;max-width:70ch}
     .coin-back{display:inline-block;margin:8px 16px 24px;color:#ff7a00;font-size:13px;letter-spacing:.04em;text-transform:uppercase;text-decoration:none}
     .coin-back:hover{text-decoration:underline}
+    .up{color:var(--up)} .down{color:var(--down)}
+    .dsindex-hero{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-end;padding:20px 16px 6px}
+    .dsindex-value{font:800 clamp(48px,8vw,92px)/1 Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:#f2f2f2;margin:6px 0 4px}
+    .dsindex-delta{font-size:22px;font-weight:700}
+    .dsindex-side{display:flex;gap:1px;background:#1f1f1f;border:1px solid #1f1f1f}
+    .dsindex-side .coin-stat{min-width:150px}
+    @media (max-width:560px){.dsindex-side{flex-direction:column}}
   </style>
 </head>
 <body>
@@ -85,7 +92,7 @@
     <div class="topbar__quote" aria-label="Tracked memecoin market cap"><span class="quote__label">MCAP</span><span id="mcapValue" class="quote__value">&mdash;</span><span id="mcapChange" class="quote__delta">&mdash;</span></div>
   </header>
   <section class="ticker" aria-label="Section navigator">
-    <div class="topbar__carousel" aria-label="Section navigator"><div class="topbar__carousel-track"><a href="/market/">TOP 100 SHITCOINS</a><a href="/heatmap/">LIVE HEATMAP</a><a href="/gainers/">TOP GAINERS 24H</a><a href="/losers/">TOP LOSERS 24H</a><a href="/volume/">HIGHEST VOLUME</a><a href="/market/">RANKED BY MARKET CAP</a><a href="/market/">MEMECOINS ONLY</a><a href="/market/">TOP 100 SHITCOINS</a><a href="/heatmap/">LIVE HEATMAP</a><a href="/gainers/">TOP GAINERS 24H</a><a href="/losers/">TOP LOSERS 24H</a><a href="/volume/">HIGHEST VOLUME</a><a href="/market/">RANKED BY MARKET CAP</a><a href="/market/">MEMECOINS ONLY</a></div></div>
+    <div class="topbar__carousel" aria-label="Section navigator"><div class="topbar__carousel-track"><a href="/market/">TOP 100 SHITCOINS</a><a href="/index/">DAILY SHITCOINS INDEX</a><a href="/heatmap/">LIVE HEATMAP</a><a href="/gainers/">TOP GAINERS 24H</a><a href="/losers/">TOP LOSERS 24H</a><a href="/volume/">HIGHEST VOLUME</a><a href="/#bestweek">BEST OF THE WEEK</a><a href="/market/">RANKED BY MARKET CAP</a><a href="/market/">TOP 100 SHITCOINS</a><a href="/index/">DAILY SHITCOINS INDEX</a><a href="/heatmap/">LIVE HEATMAP</a><a href="/gainers/">TOP GAINERS 24H</a><a href="/losers/">TOP LOSERS 24H</a><a href="/volume/">HIGHEST VOLUME</a><a href="/#bestweek">BEST OF THE WEEK</a><a href="/market/">RANKED BY MARKET CAP</a></div></div>
   </section>
   <main class="layout">
     <section class="panel" data-coin-id="moo-deng" data-coin-symbol="MOODENG">
@@ -95,13 +102,13 @@
         
       </div>
       <div class="coin-stats">
-        <div class="coin-stat"><p class="coin-stat__label">Price</p><p class="coin-stat__value" id="coinPrice">$0.0382</p></div>
-        <div class="coin-stat"><p class="coin-stat__label">24h</p><p class="coin-stat__value up" id="coinChange">+2.31%</p></div>
-        <div class="coin-stat"><p class="coin-stat__label">Market cap</p><p class="coin-stat__value" id="coinMcap">$37.80M</p></div>
-        <div class="coin-stat"><p class="coin-stat__label">Rank</p><p class="coin-stat__value">#530</p></div>
-        <div class="coin-stat"><p class="coin-stat__label">24h volume</p><p class="coin-stat__value" id="coinVol">$9.54M</p></div>
+        <div class="coin-stat"><p class="coin-stat__label">Price</p><p class="coin-stat__value" id="coinPrice">$0.0379</p></div>
+        <div class="coin-stat"><p class="coin-stat__label">24h</p><p class="coin-stat__value up" id="coinChange">+2.40%</p></div>
+        <div class="coin-stat"><p class="coin-stat__label">Market cap</p><p class="coin-stat__value" id="coinMcap">$37.50M</p></div>
+        <div class="coin-stat"><p class="coin-stat__label">Rank</p><p class="coin-stat__value">#536</p></div>
+        <div class="coin-stat"><p class="coin-stat__label">24h volume</p><p class="coin-stat__value" id="coinVol">$9.88M</p></div>
       </div>
-      <div class="coin-body"><p>Moo Deng (MOODENG) is a memecoin. It currently ranks #530 among meme-token cryptocurrencies by market capitalization, with a market capitalization of $37.80M and 24-hour trading volume of $9.54M. It is listed on Coinbase and Kraken. Like all memecoins, MOODENG is highly speculative and its price can be extremely volatile.</p></div>
+      <div class="coin-body"><p>Moo Deng (MOODENG) is a memecoin. It currently ranks #536 among meme-token cryptocurrencies by market capitalization, with a market capitalization of $37.50M and 24-hour trading volume of $9.88M. It is listed on Coinbase and Kraken. Like all memecoins, MOODENG is highly speculative and its price can be extremely volatile.</p></div>
       <a class="coin-back" href="/market/">&larr; Back to all shitcoins</a>
     </section>
   </main>

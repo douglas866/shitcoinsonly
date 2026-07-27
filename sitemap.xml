@@ -2,6 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://shitcoinsonly.com/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/market/</loc><changefreq>hourly</changefreq></url>
+  <url><loc>https://shitcoinsonly.com/index/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/heatmap/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/gainers/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/losers/</loc><changefreq>hourly</changefreq></url>
@@ -20,6 +21,7 @@
   <url><loc>https://shitcoinsonly.com/coin/banana-for-scale-2/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/useless-3/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/turbo/</loc><changefreq>hourly</changefreq></url>
+  <url><loc>https://shitcoinsonly.com/coin/memetoon/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/toshi/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/degen-base/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/peanut-the-squirrel/</loc><changefreq>hourly</changefreq></url>
@@ -27,8 +29,8 @@
   <url><loc>https://shitcoinsonly.com/coin/mog-coin/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/moo-deng/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/notcoin/</loc><changefreq>hourly</changefreq></url>
-  <url><loc>https://shitcoinsonly.com/coin/memecoin-2/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/neiro-3/</loc><changefreq>hourly</changefreq></url>
+  <url><loc>https://shitcoinsonly.com/coin/terminal-of-fun/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/gigachad-2/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/dogs-2/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/aixbt/</loc><changefreq>hourly</changefreq></url>

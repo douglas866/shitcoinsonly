@@ -107,6 +107,7 @@ async function loadMarket() {
         name: m.name || "",
         price: m.current_price,
         change: m.price_change_percentage_24h,
+        change7d: (m.price_change_percentage_7d_in_currency != null ? m.price_change_percentage_7d_in_currency : m.price_change_percentage_7d),
         marketCap: m.market_cap,
         volume: m.total_volume,
       }))
@@ -119,6 +120,8 @@ async function loadMarket() {
     renderMarket();
     renderMovers();
     renderVolume();
+    renderBestWeek();
+    renderIndex();
     updateQuote();
     renderHeatmapFrom(marketCache);
     markLiveUpdate();
@@ -204,7 +207,8 @@ function renderMarket() {
 
 // === Gainers / Losers ===
 function renderMovers() {
-  const eligible = marketCache.filter((c) => isFinite(c.change));
+  // Exclude new-listing garbage (|24h| > 900% is a data artifact, not a real move).
+  const eligible = marketCache.filter((c) => isFinite(c.change) && Math.abs(c.change) <= 900);
   const gainers = [...eligible].sort((a, b) => b.change - a.change).slice(0, 10);
   const losers = [...eligible].sort((a, b) => a.change - b.change).slice(0, 10);
   fillMovers("gainersTable", gainers);
@@ -251,6 +255,59 @@ function renderVolume() {
         <td class="num">${fmtBig(c.marketCap)}</td>
       </tr>`)
     .join("");
+}
+
+// === Best performing shitcoins of the week (7d) ===
+function renderBestWeek() {
+  const tbody = document.querySelector("#bestWeekTable tbody");
+  if (!tbody) return;
+  const rows = marketCache.filter((c) => isFinite(c.change7d) && Math.abs(c.change7d) <= 1500).sort((a, b) => b.change7d - a.change7d).slice(0, 10);
+  if (!rows.length) { tbody.innerHTML = `<tr><td colspan="4" class="loading">NO DATA</td></tr>`; return; }
+  tbody.innerHTML = rows
+    .map((c, i) => `
+      <tr>
+        <td class="num rank">${i + 1}</td>
+        <td class="ticker-cell">${tickerCellHtml(c)}</td>
+        ${pctCell(c.change7d)}
+        <td class="num">${fmtPrice(c.price)}</td>
+      </tr>`)
+    .join("");
+}
+
+// === Daily Shitcoins Index — market-cap-weighted performance of the top 100.
+// Index level = 100 means the pack is flat; +/- tracks the weighted average move. ===
+// New-listing coins report garbage % (e.g. +56000% over 7d). Winsorize each
+// coin's period change to +/-90% before weighting so one glitch/moonshot can't
+// dominate the index — it stays a market measure, not an outlier readout.
+function weightedChange(field) {
+  let total = 0, weighted = 0;
+  marketCache.forEach((c) => {
+    if (isFinite(c.marketCap) && c.marketCap > 0 && isFinite(c[field])) {
+      total += c.marketCap;
+      weighted += c.marketCap * Math.max(-90, Math.min(90, c[field]));
+    }
+  });
+  return total > 0 ? weighted / total : null;
+}
+function renderIndex() {
+  const valEl = document.getElementById("indexValue");
+  if (!valEl) return;
+  const w24 = weightedChange("change");
+  const w7 = weightedChange("change7d");
+  if (w24 != null) {
+    valEl.textContent = (100 * (1 + w24 / 100)).toFixed(2);
+    setDelta(document.getElementById("indexChange"), w24);
+  }
+  const v7 = document.getElementById("index7dValue");
+  if (v7 && w7 != null) { v7.textContent = (100 * (1 + w7 / 100)).toFixed(2); setDelta(document.getElementById("index7dChange"), w7); }
+  const cnt = document.getElementById("indexCount");
+  if (cnt) cnt.textContent = String(marketCache.length);
+  const upd = document.getElementById("indexUpdated");
+  if (upd) {
+    const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(new Date());
+    const lk = {}; parts.forEach((p) => (lk[p.type] = p.value));
+    upd.textContent = `${lk.year}-${lk.month}-${lk.day} ${lk.hour}:${lk.minute} ET`;
+  }
 }
 
 // === Topbar total-market-cap quote ===
