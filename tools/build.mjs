@@ -166,7 +166,7 @@ function page({ title, description, canonical, jsonLd = "", main, script }) {
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/css/styles.css?v=2" />
+  <link rel="stylesheet" href="/css/styles.css?v=3" />
 ${jsonLd}${favicons()}
   <style>${SHELL_STYLE}
   </style>
@@ -185,11 +185,21 @@ ${script}
 `;
 }
 
+// ---------- per-coin brand colour (visible on the dark bg) ----------
+const BRAND = { ETH:"#7a9cff", BNB:"#f3ba2f", XRP:"#4bb8ff", SOL:"#14f195", TRX:"#ff4b4b", DOGE:"#e0c04a", SHIB:"#ff6c2f", PEPE:"#63d15a", ADA:"#3e78e0", AVAX:"#ff5a5b", LINK:"#4b8af5", DOT:"#ff45a0", XLM:"#4bccf0", LTC:"#8fb0e0", XMR:"#ff8a3d", ATOM:"#8f9bef", UNI:"#ff5fb2", AAVE:"#c86ec0", NEAR:"#2ff0a0", ARB:"#4aa8f0", POL:"#a86bff", MATIC:"#a86bff", HBAR:"#a0acc4", BCH:"#4ec26a", CRO:"#6b8cff", SUI:"#4da8ff", APT:"#3ad8c8", INJ:"#4fb8ff", TIA:"#9a6cf6", RENDER:"#ff6a4c", FIL:"#4ec3e0", ALGO:"#cfcfe0", ICP:"#e85fa0", CRV:"#7bd07b", LDO:"#5fd0e0", PENGU:"#7ec8ff", TRUMP:"#e0b84a", PYTH:"#9a6cf6", JUP:"#4fd8c8", ZEC:"#f4b728", DASH:"#3aa8e0", ETC:"#4ec26a", HYPE:"#3fe0c0", VET:"#4ab0f0", TAO:"#dcdce0", ENA:"#cfcfe0", SKY:"#4fb0ff", WLD:"#e0e0e6", MORPHO:"#6b8cff", CAKE:"#4fd0e0", AERO:"#4fa8ff", SEI:"#e85a5a", JTO:"#4fd8c8", GNO:"#4fd0a0", ONDO:"#4a8fff", KAS:"#4ec6b0", SPX:"#e0b84a", VIRTUAL:"#6bb0ff", FET:"#6b8cff", SUN:"#f3ba2f", QNT:"#dcdce0", OKB:"#4b8af5", KCS:"#4fd0a0", GT:"#e05a7a", NEXO:"#4a6fff", LEO:"#f3ba2f", WBT:"#4fb0ff", MNT:"#8fa0b4", BGB:"#4fd0e0", XAUT:"#e0b84a", PAXG:"#e0c84a", KAU:"#e0c84a", WLFI:"#e0b84a", ASTER:"#a86bff", PI:"#c9a0ff", JST:"#5fd0e0", BDX:"#6b8cff", XDC:"#4fb0d0", HASH:"#7a9cff", ETHFI:"#7a9cff", NIGHT:"#8f9bef", KAITO:"#4fd8c8", MEME:"#e0b84a", CC:"#cfcfe0" };
+function brandColor(sym) {
+  const s = String(sym || "").toUpperCase();
+  if (BRAND[s]) return BRAND[s];
+  let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return `hsl(${h % 360} 72% 66%)`;
+}
+
 // ---------- renderers (shared with homepage SSR) ----------
 function tickerLink(coin, pageSet) {
   const slug = pageSet.get(coin.symbol);
   const t = esc(coin.symbol);
-  return slug ? `<a class="ticker-link" href="/coin/${slug}/">${t}</a>` : `<span class="ticker-link">${t}</span>`;
+  const col = brandColor(coin.symbol);
+  return slug ? `<a class="ticker-link" style="color:${col}" href="/coin/${slug}/">${t}</a>` : `<span class="ticker-link" style="color:${col}">${t}</span>`;
 }
 function nameLink(coin, pageSet, cls = "company-link") {
   const slug = pageSet.get(coin.symbol);
@@ -324,9 +334,10 @@ function coinPage(c) {
   {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"${ORIGIN}/"},{"@type":"ListItem","position":2,"name":"Coins","item":"${ORIGIN}/market/"},{"@type":"ListItem","position":3,"name":"${esc(c.name)}"}]}
   </script>
 `;
-  const main = `    <section class="panel" data-coin-id="${esc(c.id)}" data-coin-symbol="${esc(c.symbol)}">
+  const brand = brandColor(c.symbol);
+  const main = `    <section class="panel" data-coin-id="${esc(c.id)}" data-coin-symbol="${esc(c.symbol)}" data-brand="${brand}">
       <div class="coin-hero">
-        <span class="coin-hero__sym">${esc(c.symbol)}</span>
+        <span class="coin-hero__sym" style="color:${brand}">${esc(c.symbol)}</span>
         <span class="coin-hero__name">${esc(c.name)}</span>
         ${chain ? `<span class="coin-hero__chain">${esc(chain)}</span>` : ""}
       </div>
@@ -336,6 +347,20 @@ function coinPage(c) {
         <div class="coin-stat"><p class="coin-stat__label">Market cap</p><p class="coin-stat__value" id="coinMcap">${fmtBig(c.marketCap)}</p></div>
         <div class="coin-stat"><p class="coin-stat__label">Rank</p><p class="coin-stat__value">${c.rank ? "#" + c.rank : "—"}</p></div>
         <div class="coin-stat"><p class="coin-stat__label">24h volume</p><p class="coin-stat__value" id="coinVol">${fmtBig(c.volume)}</p></div>
+      </div>
+      <div class="coin-chart">
+        <div class="coin-chart__head">
+          <span class="coin-chart__title">Price</span>
+          <div class="coin-chart__ranges" id="coinChartRanges">
+            <button type="button" data-days="7">7D</button>
+            <button type="button" data-days="30" class="is-active">30D</button>
+            <button type="button" data-days="90">90D</button>
+          </div>
+        </div>
+        <div class="coin-chart__canvas-wrap">
+          <canvas id="coinChart" width="820" height="260" role="img" aria-label="${esc(c.symbol)} price chart"></canvas>
+          <div class="coin-chart__empty" id="coinChartEmpty">Loading chart…</div>
+        </div>
       </div>
       <div class="coin-body"><p>${esc(coinParagraph(c))}</p></div>
       <a class="coin-back" href="/market/">&larr; Back to all shitcoins</a>

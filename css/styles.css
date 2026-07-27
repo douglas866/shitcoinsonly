@@ -3069,8 +3069,8 @@ body{
 .data-table tbody tr{transition:background .14s ease}
 .data-table tbody tr:hover{background:rgba(176,107,255,.10)!important;box-shadow:inset 3px 0 0 var(--accent)}
 .ticker-link{font-weight:800}
-a.ticker-link{color:var(--accent)!important}
-a.ticker-link:hover{filter:drop-shadow(0 0 8px rgba(176,107,255,.6))}
+a.ticker-link{color:var(--accent)}
+a.ticker-link:hover{filter:drop-shadow(0 0 8px currentColor);opacity:.92}
 .num.up,td.up,.up{color:var(--up)!important;text-shadow:0 0 12px rgba(47,243,173,.35)}
 .num.down,td.down,.down{color:var(--down)!important;text-shadow:0 0 12px rgba(255,79,139,.30)}
 .pager__btn{border:1px solid rgba(176,107,255,.3)!important;border-radius:999px!important;color:var(--accent);transition:.15s}
@@ -3079,9 +3079,36 @@ a.ticker-link:hover{filter:drop-shadow(0 0 8px rgba(176,107,255,.6))}
 .heatmap-canvas{background:#0a0612!important;border:1px solid rgba(176,107,255,.2)!important;border-radius:16px!important}
 .heatmap-cell{border-radius:6px!important}
 .heatmap-cell:hover{outline:2px solid #fff!important;box-shadow:0 0 20px rgba(176,107,255,.5)}
-.dsindex-value,.coin-hero__sym{background:var(--so-grad)!important;-webkit-background-clip:text!important;background-clip:text!important;color:transparent!important;filter:drop-shadow(0 0 18px rgba(176,107,255,.35))}
+.dsindex-value{background:var(--so-grad)!important;-webkit-background-clip:text!important;background-clip:text!important;color:transparent!important;filter:drop-shadow(0 0 18px rgba(176,107,255,.35))}
+.coin-hero__sym{font-weight:800;letter-spacing:-.01em;filter:drop-shadow(0 0 16px currentColor)}
 .coin-hero__chain{border:1px solid rgba(176,107,255,.4)!important;color:var(--accent)!important;border-radius:999px!important;background:var(--accent-soft)}
 .coin-stats{border-radius:14px;overflow:hidden}
 .footer{border-top:1px solid rgba(176,107,255,.16)!important}
 .loading{color:var(--accent)!important}
 .table-wrap{border-radius:0 0 20px 20px}
+
+/* ---- per-coin neon price chart ---- */
+.coin-chart{margin:8px 16px 4px;padding:14px 4px 6px;border:1px solid rgba(176,107,255,.14);border-radius:16px;background:linear-gradient(180deg,rgba(20,12,40,.5),rgba(12,7,26,.5))}
+.coin-chart__head{display:flex;align-items:center;justify-content:space-between;padding:0 12px 10px}
+.coin-chart__title{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-faint);font-weight:700}
+.coin-chart__ranges{display:flex;gap:6px}
+.coin-chart__ranges button{font:inherit;font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--text-dim);background:rgba(176,107,255,.08);border:1px solid rgba(176,107,255,.2);border-radius:999px;padding:4px 11px;cursor:pointer;transition:.15s}
+.coin-chart__ranges button:hover{background:var(--accent-soft);color:var(--text)}
+.coin-chart__ranges button.is-active{background:var(--so-grad);color:#0a0612;border-color:transparent;box-shadow:0 0 14px rgba(176,107,255,.4)}
+.coin-chart__canvas-wrap{position:relative;width:100%;height:260px;padding:0 8px}
+#coinChart{width:100%;height:100%;display:block;transition:opacity .2s ease}
+.coin-chart__empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-faint);font-size:13px;font-weight:600;letter-spacing:.02em}
+
+/* ---- modern typography: retire flat white, tabular neon numbers ---- */
+body{color:var(--text)}
+.data-table td,.coin-body p,.company-link{color:var(--text)}
+.data-table td,.num,.coin-stat__value,.quote__value,.dsindex-value,.coin-hero__sym,.pager__label,.mono{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.coin-stat__value{color:var(--text)!important;font-weight:800;letter-spacing:-.01em;text-shadow:0 0 14px rgba(176,107,255,.16)}
+.coin-stat__label{color:var(--text-faint)!important;letter-spacing:.11em;text-transform:uppercase}
+.coin-hero__name{color:var(--text-dim)!important}
+.quote__value{color:var(--text)!important;letter-spacing:-.01em;text-shadow:0 0 14px rgba(176,107,255,.16)}
+a.company-link{color:var(--text)!important;font-weight:600;transition:color .14s ease}
+a.company-link:hover{color:#fff!important}
+.coin-body p{color:var(--text-dim)}
+.coin-back{color:var(--accent)!important}
+.coin-back:hover{filter:drop-shadow(0 0 8px rgba(176,107,255,.55))}
