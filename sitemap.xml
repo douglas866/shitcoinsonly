@@ -20,9 +20,9 @@
   <url><loc>https://shitcoinsonly.com/coin/bitcoin-cash/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/litecoin/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/hedera-hashgraph/</loc><changefreq>hourly</changefreq></url>
+  <url><loc>https://shitcoinsonly.com/coin/shiba-inu/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/sui/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/avalanche-2/</loc><changefreq>hourly</changefreq></url>
-  <url><loc>https://shitcoinsonly.com/coin/shiba-inu/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/crypto-com-chain/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/uniswap/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/near/</loc><changefreq>hourly</changefreq></url>
@@ -35,8 +35,8 @@
   <url><loc>https://shitcoinsonly.com/coin/sky/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/morpho/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/polkadot/</loc><changefreq>hourly</changefreq></url>
-  <url><loc>https://shitcoinsonly.com/coin/pepe/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/internet-computer/</loc><changefreq>hourly</changefreq></url>
+  <url><loc>https://shitcoinsonly.com/coin/pepe/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/worldcoin-wld/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/ethereum-classic/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/quant-network/</loc><changefreq>hourly</changefreq></url>
@@ -59,17 +59,18 @@
   <url><loc>https://shitcoinsonly.com/coin/ether-fi/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/dash/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/vechain/</loc><changefreq>hourly</changefreq></url>
-  <url><loc>https://shitcoinsonly.com/coin/virtual-protocol/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/pudgy-penguins/</loc><changefreq>hourly</changefreq></url>
+  <url><loc>https://shitcoinsonly.com/coin/virtual-protocol/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/official-trump/</loc><changefreq>hourly</changefreq></url>
-  <url><loc>https://shitcoinsonly.com/coin/pyth-network/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/curve-dao-token/</loc><changefreq>hourly</changefreq></url>
-  <url><loc>https://shitcoinsonly.com/coin/lido-dao/</loc><changefreq>hourly</changefreq></url>
+  <url><loc>https://shitcoinsonly.com/coin/pyth-network/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/spx6900/</loc><changefreq>hourly</changefreq></url>
-  <url><loc>https://shitcoinsonly.com/coin/celestia/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/kaito/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/fetch-ai/</loc><changefreq>hourly</changefreq></url>
+  <url><loc>https://shitcoinsonly.com/coin/lido-dao/</loc><changefreq>hourly</changefreq></url>
+  <url><loc>https://shitcoinsonly.com/coin/celestia/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/sei-network/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/gnosis/</loc><changefreq>hourly</changefreq></url>
   <url><loc>https://shitcoinsonly.com/coin/layerzero/</loc><changefreq>hourly</changefreq></url>
+  <url><loc>https://shitcoinsonly.com/coin/jito-governance-token/</loc><changefreq>hourly</changefreq></url>
 </urlset>
